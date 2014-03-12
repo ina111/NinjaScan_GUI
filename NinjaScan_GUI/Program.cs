@@ -5,13 +5,24 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.IO.Ports;
+using System.Windows.Forms;
 
 namespace NinjaScan_GUI
 {
     public class Program
     {
+        /// <summary>
+        /// アプリケーションのメイン エントリ ポイントです。
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1());
+        }
 
-        static void Main(string[] args)
+        static void Main2(string[] args)
         {
             string PortName = "COM3"; // 自分のPCのCOMポート
             int BaudRate = 115200; // baudrate is anything OK
@@ -33,23 +44,28 @@ namespace NinjaScan_GUI
                     if (head == A_Page.header)
                     {
                         A_Page.Read(br);
-                        Console.Write(A_Page.ax + "," + A_Page.ay + "," + A_Page.az + "," +
-                            A_Page.gx + "," + A_Page.gy + "," + A_Page.gz + "\n");
+                        //Console.Write("[A page]:");
+                        //Console.Write(A_Page.ax + "," + A_Page.ay + "," + A_Page.az + "," +
+                        //    A_Page.gx + "," + A_Page.gy + "," + A_Page.gz + "\n");
                     }
                     else if (head == P_Page.header)
                     {
                         P_Page.Read(br);
-                        Console.Write("PPP" + "\n");
+                        Console.Write("[P page]:");
+                        Console.Write(P_Page.pressure * 0.0001 + "(hPa)\n");
                     }
                     else if (head == M_Page.header)
                     {
                         M_Page.Read(br);
-                        Console.Write("MMM" + "\n");
+                        Console.Write("[M page]:");
+                        double conv = 0.1;
+                        Console.Write(M_Page.mx * conv + "," + M_Page.my * conv + "," + M_Page.mz * conv + "\n");
                     }
                     else if (head == G_Page.header)
                     {
                         G_Page.Read(br);
-                        Console.Write(G_Page.ubx + "\n");
+                        //Console.Write("[G page]:");
+                        //Console.Write(G_Page.ubx + "\n");
                     }
                 } while (true);
             }
@@ -198,8 +214,8 @@ namespace NinjaScan_GUI
 
         public static UInt32 inner_time;
         public static UInt32 gps_time;
-        public static UInt32 pressure;
-        public static UInt32 temperature;
+        public static UInt32 pressure; //Pa*100
+        public static UInt32 temperature;  //deg*100
         public static UInt32 coef1, coef2, coef3, coef4, coef5, coef6;
 
         public static void Read(BinaryReader input)
