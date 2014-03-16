@@ -109,11 +109,19 @@ namespace NinjaScan_GUI
             //}
 
 
-
-            // メッセージの出力
-            Console.WriteLine("{0} ({1}歳) さん、ようこそお越しくださいました。", "taka", 27);
             Console.ReadLine();
         }
+    }
+
+    /// <summary>
+    /// Sylphide Protocol
+    /// </summary>
+    public class Sylphide_Protocol
+    {
+        public static byte header0 = 0xF7;
+        public static byte header1 = 0xE0;
+        public static byte sequence;
+        public static byte[] crc16;
     }
 
     /// <summary>

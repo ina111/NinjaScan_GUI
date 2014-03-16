@@ -30,6 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.zedGraphControl1 = new ZedGraph.ZedGraphControl();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // zedGraphControl1
@@ -45,6 +46,11 @@
             this.zedGraphControl1.ScrollMinY2 = 0D;
             this.zedGraphControl1.Size = new System.Drawing.Size(548, 408);
             this.zedGraphControl1.TabIndex = 0;
+            this.zedGraphControl1.Load += new System.EventHandler(this.zedGraphControl1_Load);
+            // 
+            // timer1
+            // 
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // GyroPlot
             // 
@@ -61,5 +67,6 @@
         #endregion
 
         private ZedGraph.ZedGraphControl zedGraphControl1;
+        private System.Windows.Forms.Timer timer1;
     }
 }
