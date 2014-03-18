@@ -140,6 +140,19 @@ namespace NinjaScan_GUI
         public static UInt32 pressure, temp_press;
         public static Int16 temp_gyro;
 
+        public static double cal_ax, cal_ay, cal_az;
+        public static double cal_gx, cal_gy, cal_gz;
+        public static double mean_ax = Math.Pow(2, 16) / 2;
+        public static double mean_ay = Math.Pow(2, 16) / 2;
+        public static double mean_az = Math.Pow(2, 16) / 2;
+        public static double mean_gx = Math.Pow(2, 16) / 2;
+        public static double mean_gy = Math.Pow(2, 16) / 2;
+        public static double mean_gz = Math.Pow(2, 16) / 2;
+        public static double fullScale_gyro = 2000; //Full Scale ±2000dps
+        public static double fullScale_acc = 8; // Full Scale ±8G
+        public static double lsb_gyro = fullScale_gyro * 2 / Math.Pow(2, 16);
+        public static double lsb_acc = fullScale_acc * 2 / Math.Pow(2, 16);
+
 
         public static void Read(BinaryReader input)
         {
@@ -158,6 +171,7 @@ namespace NinjaScan_GUI
             pressure = Read_3byte_BigEndian(input.ReadBytes(3)); //すごいロガーではNo Data
             temp_press = Read_3byte_BigEndian(input.ReadBytes(3)); //すごいロガーではNo Data
             temp_gyro = BitConverter.ToInt16(input.ReadBytes(2), 0);
+            Convert_A_page();
         }
 
         private static UInt32 Read_3byte_BigEndian(byte[] data)
@@ -166,6 +180,16 @@ namespace NinjaScan_GUI
             //byte[] 配列に変換する
             byte[] buffer = { data[2], data[1], data[0], 0 };
             return BitConverter.ToUInt32(buffer, 0);
+        }
+
+        private static void Convert_A_page()
+        {
+            cal_ax = (ax - mean_ax) * lsb_acc;
+            cal_ay = (ay - mean_ay) * lsb_acc;
+            cal_az = (az - mean_az) * lsb_acc;
+            cal_gx = (gx - mean_gx) * lsb_gyro;
+            cal_gy = (gy - mean_gy) * lsb_gyro;
+            cal_gz = (gz - mean_gz) * lsb_gyro;
         }
     }
 
@@ -199,6 +223,13 @@ namespace NinjaScan_GUI
         public static UInt32 gps_time;
         public static UInt32 mx, my, mz;
 
+        public static double cal_mx, cal_my, cal_mz;
+        public static double mean_mx = Math.Pow(2, 16) / 2;
+        public static double mean_my = Math.Pow(2, 16) / 2;
+        public static double mean_mz = Math.Pow(2, 16) / 2;
+        public static double fullScale_mag = 1000; // Full Scale ±1000uT
+        public static double lsb_mag = 0.1; // sensitivity 0.1uT/LSB
+
         public static void Read(BinaryReader input)
         {
             input.ReadBytes(2);
@@ -208,6 +239,14 @@ namespace NinjaScan_GUI
             my = BitConverter.ToUInt16(input.ReadBytes(2), 0);
             mz = BitConverter.ToUInt16(input.ReadBytes(2), 0);
             input.ReadBytes(18);
+            Convert_M_page();
+        }
+
+        private static void Convert_M_page()
+        {
+            cal_mx = (mx - mean_mx) * lsb_mag;
+            cal_my = (my - mean_my) * lsb_mag;
+            cal_mz = (mz - mean_mz) * lsb_mag;
         }
     }
 

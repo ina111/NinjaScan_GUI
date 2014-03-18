@@ -48,11 +48,35 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GoogleEarth.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GoogleEarth.Designer.cs">
+      <DependentUpon>GoogleEarth.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PressPlot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PressPlot.Designer.cs">
+      <DependentUpon>PressPlot.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MagPlot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MagPlot.Designer.cs">
+      <DependentUpon>MagPlot.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccPlot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AccPlot.Designer.cs">
+      <DependentUpon>AccPlot.cs</DependentUpon>
     </Compile>
     <Compile Include="GyroPlot.cs">
       <SubType>Form</SubType>
@@ -62,20 +86,42 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="GoogleEarth.html" />
     <Content Include="License-LGPL.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="GoogleEarth.resx">
+      <DependentUpon>GoogleEarth.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PressPlot.resx">
+      <DependentUpon>PressPlot.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MagPlot.resx">
+      <DependentUpon>MagPlot.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="AccPlot.resx">
+      <DependentUpon>AccPlot.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GyroPlot.resx">
       <DependentUpon>GyroPlot.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
