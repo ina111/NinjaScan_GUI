@@ -1,0 +1,40 @@
+﻿<html>
+<head>
+<title>Sample</title>
+<script type="text/javascript" src="https://www.google.com/jsapi"> </script>
+<script type="text/javascript">
+  var ge;
+  google.load("earth", "1", {"other_params":"sensor=true_or_false"});
+  function init() {
+  google.earth.createInstance('map3d', initCB, failureCB);
+  }
+  function initCB(instance) {
+  ge = instance;
+  ge.getWindow().setVisibility(true);
+  ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, true);
+  }
+  function failureCB(errorCode) {
+  }
+  google.setOnLoadCallback(init);
+
+  var js_func = function(lat, lon, alt){
+  var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+  lookAt.setLatitude(lat);
+  lookAt.setLongitude(lon);
+  lookAt.setRange(3000.0);
+  ge.getView().setAbstractView(lookAt);
+
+  var placemark = ge.createPlacemark('');
+  var point = ge.createPoint('');
+  point.setLatitude(lat);
+  point.setLongitude(lon);
+  point.setAltitude(alt);
+  placemark.setGeometry(point);
+  ge.getFeatures().appendChild(placemark);
+  }
+</script>
+</head>
+<body>
+<div id="map3d" style="height: 400px; width: 600px;"></div>
+</body>
+</html>
