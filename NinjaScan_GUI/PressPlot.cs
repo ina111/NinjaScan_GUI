@@ -47,8 +47,8 @@ namespace NinjaScan_GUI
             PressPane.XAxis.Scale.Max = (double)numericUpDown1.Value;
             PressPane.XAxis.Scale.MinorStep = 1;
             PressPane.XAxis.Scale.MajorStep = 5;
-            PressPane.YAxis.Scale.Max = (65536 / 2) + (65536 / 2) / 5;
-            PressPane.YAxis.Scale.Min = (65536 / 2) - (65536 / 2) / 5;
+            PressPane.YAxis.Scale.Max = 110000;
+            PressPane.YAxis.Scale.Min = 110000 / 5;
 
             // Scale the axes
             zedGraphControl1.AxisChange();
@@ -133,8 +133,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton1.Checked)
             {
-                PressPane.YAxis.Scale.Max = 11000000;
-                PressPane.YAxis.Scale.Min = 11000000 / 5;
+                PressPane.YAxis.Scale.Max = 110000;
+                PressPane.YAxis.Scale.Min = 110000 / 5;
             }
         }
 
@@ -142,8 +142,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton2.Checked)
             {
-                PressPane.YAxis.Scale.Max = 11000000;
-                PressPane.YAxis.Scale.Min = 11000000 / 2;
+                PressPane.YAxis.Scale.Max = 110000;
+                PressPane.YAxis.Scale.Min = 110000 / 2;
             }
         }
 
@@ -151,8 +151,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton3.Checked)
             {
-                PressPane.YAxis.Scale.Max = 11000000;
-                PressPane.YAxis.Scale.Min = 11000000 / 1.2;
+                PressPane.YAxis.Scale.Max = 110000;
+                PressPane.YAxis.Scale.Min = 110000 / 1.2;
             }
         }
 

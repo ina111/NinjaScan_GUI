@@ -23,7 +23,7 @@ namespace NinjaScan_GUI
                 webBrowser1.WebBrowserShortcutsEnabled = false;
                 //webBrowser1.ObjectForScripting = this;
 
-                webBrowser1.Navigate("C:\\Users\\111\\Documents\\Visual Studio 2013\\Projects\\NinjaScan_GUI\\NinjaScan_GUI\\GoogleEarth.html");
+                webBrowser1.Navigate(System.Environment.CurrentDirectory + "\\GoogleEarth.html");
             }
             else
             {

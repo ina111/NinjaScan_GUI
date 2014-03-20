@@ -219,9 +219,10 @@ namespace NinjaScan_GUI
         public static byte header = 0x4d;
         public static string name = "M";
         // すごいロガーとその他Sylphide形式のものではxyzの順番が違うので気をつけること
-        public static UInt32 inner_time;
+        public static UInt16 inner_time;
         public static UInt32 gps_time;
-        public static UInt32 mx, my, mz;
+        public static UInt16 mx, my, mz; // uT
+        // OUTPUT data range is -30000 to +300000, FullScale is +-1000uT
 
         public static double cal_mx, cal_my, cal_mz;
         public static double mean_mx = Math.Pow(2, 16) / 2;
@@ -235,9 +236,12 @@ namespace NinjaScan_GUI
             input.ReadBytes(2);
             inner_time = Convert.ToByte(input.ReadByte());
             gps_time = BitConverter.ToUInt32(input.ReadBytes(4), 0);
-            mx = BitConverter.ToUInt16(input.ReadBytes(2), 0);
-            my = BitConverter.ToUInt16(input.ReadBytes(2), 0);
-            mz = BitConverter.ToUInt16(input.ReadBytes(2), 0);
+            //mx = BitConverter.ToUInt16(input.ReadBytes(2), 0);
+            //my = BitConverter.ToUInt16(input.ReadBytes(2), 0);
+            //mz = BitConverter.ToUInt16(input.ReadBytes(2), 0);
+            mx = Read_2byte_BigEndian(input.ReadBytes(2));
+            my = Read_2byte_BigEndian(input.ReadBytes(2));
+            mz = Read_2byte_BigEndian(input.ReadBytes(2));
             input.ReadBytes(18);
             Convert_M_page();
         }
@@ -248,11 +252,20 @@ namespace NinjaScan_GUI
             cal_my = (my - mean_my) * lsb_mag;
             cal_mz = (mz - mean_mz) * lsb_mag;
         }
+
+        private static UInt16 Read_2byte_BigEndian(byte[] data)
+        {
+            //Big Endianな2バイトのデータをBitConverterできるように2バイトのリトルエンディアンな
+            //byte[] 配列に変換する
+            byte[] buffer = { data[1], data[0] };
+            return BitConverter.ToUInt16(buffer, 0);
+        }
     }
 
     /// <summary>
     /// P page、Pressure
     /// Output: air pressure, temparature
+    /// MS5611 calcuration
     /// </summary>
     public class P_Page
     {
@@ -261,17 +274,22 @@ namespace NinjaScan_GUI
 
         public static UInt32 inner_time;
         public static UInt32 gps_time;
-        public static UInt32 pressure; //Pa*100
-        public static UInt32 temperature;  //deg*100
+        public static Int32 pressure; //hPa*100
+        public static Int32 temperature;  //deg*100
+        public static UInt32 D1;
+        public static UInt32 D2;
         public static UInt32 coef1, coef2, coef3, coef4, coef5, coef6;
+        public static Int64 dT;
+        public static Int64 OFF;
+        public static Int64 SENS;
 
         public static void Read(BinaryReader input)
         {
             input.ReadBytes(2);
             inner_time = Convert.ToByte(input.ReadByte());
             gps_time = BitConverter.ToUInt32(input.ReadBytes(4), 0);
-            pressure = Read_3byte_BigEndian(input.ReadBytes(3));
-            temperature = Read_3byte_BigEndian(input.ReadBytes(3));
+            D1 = Read_3byte_BigEndian(input.ReadBytes(3));
+            D2 = Read_3byte_BigEndian(input.ReadBytes(3));
             input.ReadBytes(6);
             coef1 = Read_2byte_BigEndian(input.ReadBytes(2));
             coef2 = Read_2byte_BigEndian(input.ReadBytes(2));
@@ -279,6 +297,12 @@ namespace NinjaScan_GUI
             coef4 = Read_2byte_BigEndian(input.ReadBytes(2));
             coef5 = Read_2byte_BigEndian(input.ReadBytes(2));
             coef6 = Read_2byte_BigEndian(input.ReadBytes(2));
+            dT = (Int32)(D2 - coef5 * Math.Pow(2,8));
+            temperature = (Int32)(2000 + dT * coef6 / Math.Pow(2,23));
+            OFF = (Int64)(coef2 * Math.Pow(2,16) + (coef4 * dT) / Math.Pow(2,7));
+            SENS = (Int64)(coef1 * Math.Pow(2,15) + (coef3 * dT) / Math.Pow(2,8));
+            pressure = (Int32)((D1 * SENS / Math.Pow(2,21) - OFF) / Math.Pow(2,15));
+
         }
 
         private static UInt32 Read_3byte_BigEndian(byte[] data)

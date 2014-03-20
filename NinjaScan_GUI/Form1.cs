@@ -149,7 +149,7 @@ namespace NinjaScan_GUI
                         {
                             P_Page.Read(br);
                             Console.Write("[P page]:");
-                            Console.Write(P_Page.pressure * 0.0001 + "(hPa)\n");
+                            Console.Write(P_Page.pressure * 0.01 + "(hPa)\n");
 
                             press = P_Page.pressure;
                             temp = P_Page.temperature;
