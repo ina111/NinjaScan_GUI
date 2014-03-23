@@ -40,5 +40,11 @@ namespace NinjaScan_GUI
             object[] args = { 42.498856, 143.433391, 0 };
             webBrowser1.Document.InvokeScript("js_func", args);
         }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            labelGPSFix.Text = "STATUS: " + UBX.gpsFix;
+            labelGPSLLH.Text = "ToW: " + UBX.itow + "\nlatitude: " + UBX.lat + "  longitude: " + UBX.lon;
+        }
     }
 }

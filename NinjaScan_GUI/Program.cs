@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.IO.Ports;
 using System.Windows.Forms;
+//using System.Collections;
 
 namespace NinjaScan_GUI
 {
@@ -190,22 +191,6 @@ namespace NinjaScan_GUI
             cal_gx = (gx - mean_gx) * lsb_gyro;
             cal_gy = (gy - mean_gy) * lsb_gyro;
             cal_gz = (gz - mean_gz) * lsb_gyro;
-        }
-    }
-
-    /// <summary>
-    /// G page、GPS
-    /// Output: u-blox format GPS binary data
-    /// </summary>
-    public class G_Page
-    {
-        public static byte header = 0x47;
-        public static string name = "G";
-        public static byte[] ubx = new byte[31];
-
-        public static void Read(BinaryReader input)
-        {
-            ubx = input.ReadBytes(31);
         }
     }
 
@@ -395,7 +380,135 @@ namespace NinjaScan_GUI
 
     }
 
-    public class ubx
+    /// <summary>
+    /// G page、GPS
+    /// Output: u-blox format GPS binary data
+    /// </summary>
+    public class G_Page
+    {
+        public static byte header = 0x47;
+        public static string name = "G";
+        public static byte[] ubx = new byte[31];
+        public static byte[] analysisObject = new byte[1000];
+
+        public static int object_offset = 0; // コピー先のオフセット
+        public static Boolean isAnalysisPayload = false; // ヘッドシークかペイロード解析か
+        public static Boolean isEnoughPayload = false; // チェックサムまでペイロードがbuffに揃っているか
+
+        public static byte[] ubxheader = { 0xB5, 0x62 };
+        public static byte[] id_NAV_POSLLH = { 0x01, 0x02 };
+
+        public static void Read(BinaryReader input)
+        {
+            ubx = input.ReadBytes(31);
+            Console.WriteLine(object_offset);
+            Array.Copy(ubx, 0, analysisObject, object_offset, 31); //31バイトをbuffにコピー,object_offsetがあれば、その分オフセット
+        }
+
+        /// <summary>
+        /// ヘッドシークか、ペイロード解析なのか
+        /// （ヘッドシーク）ヘッドがあるかどうか ->N/buff廃棄
+        /// （ヘッドあり）次のinputが必要か？
+        /// （input必要）inputを次の32byteを含めてヘッドシークでやり直し
+        /// （input不必要）IDでペイロードの長さを求めてペイロード解析へ。解析対象がさらに必要かどうか？
+        /// （buff必要）ペイロード解析としてやり直し
+        /// （buff不必要）解析を行う。チェックサム以降はbuffに入れて、append_offsetをチェックサムのindexにする
+        /// </summary>
+        /// <param name="input"></param>
+        public static void SeekHead(byte[] input)
+        {
+            try
+            {
+                if (isAnalysisPayload == false)
+                {
+                    // ヘッドシーク
+                    int index_header0 = Array.IndexOf(input, ubxheader[0]);
+                    int index_header1 = Array.IndexOf(input, ubxheader[1]);
+                    if (index_header0 < 0)
+                    {
+                        object_offset = 0;
+                        analysisObject = new byte[1000];
+                        return;
+                    }
+                    else if (index_header0 > 27 + object_offset)
+                    {
+                        object_offset += 31; // offsetは32byteからG_head分を除いた31byteを足していく
+                        return;
+                    }
+                    else if (index_header0 + 1 == index_header1)
+                    {
+                        // IDの読み取り
+                        byte[] id_header = new byte[2];
+                        Array.Copy(input, index_header0 + 2, id_header, 0, 2);
+                        // ペイロードの長さの読み取り
+                        byte[] byte_index_payload_length = new byte[2];
+                        Array.Copy(input, index_header0 + 4, byte_index_payload_length, 0, 2);
+                        UBX.length_payload = BitConverter.ToUInt16(byte_index_payload_length, 0);
+
+
+                        if (31 - 4 - index_header0 + object_offset - UBX.length_payload > 0)
+                        {
+                            // IDによる場合分け
+                            if (id_header.SequenceEqual(UBX.id_NAV_POSLLH))
+                            {
+                                UBX.Analysis_NAV_POSLLH(input, index_header0);
+                                // ここにパケットの残りを詰め込む処理を入れる
+                            } 
+                            else if ( id_header.SequenceEqual(UBX.id_NAV_STATUS))
+                            {
+                                UBX.Analysis_NAV_STATUS(input, index_header0);
+                            }
+                            object_offset = 0;
+                            analysisObject = new byte[1000];
+                            return;
+                        }
+                        else
+                        {
+                            object_offset += 31; // offsetは32byteからG_head分を除いた31byteを足していく
+                            return;
+                        }
+
+                    }
+                    else
+                    {
+                        object_offset = 0;
+                        analysisObject = new byte[1000];
+                        return;
+                    }
+
+                }
+                else
+                {
+
+                }
+                // headerの1文字目があったら29個目以上だったら次のものも読み込む。
+                // 次にIDを検索するそれで振り分け。ペイロード分だけ読み込み。
+                int i = Array.IndexOf(input, ubxheader[0]);
+                int j = Array.IndexOf(input, ubxheader[1]);
+                byte[] id_head = new byte[2];
+                // headerの判別をする or 必要な個数を全部読み込むまでバッファーをスルー or バッファーを破棄
+                if (j == i + 1 && j < 29)
+                {
+                    Array.Copy(input, j + 1, id_head, 0, 2);
+                    Console.WriteLine(id_head[0] + ", " + id_head[1]);
+
+                    // ヘッダの数によって場合分けをする
+                    // ペイロード長さによってappend_numを増やす、何回appendするかのカウンターも回す
+
+                }
+                else
+                {
+                    //buff = new byte[1000];
+                    //append_num = 0;
+                }
+                Console.WriteLine(i + ", " + j);
+            }
+            catch (Exception e)
+            { Console.WriteLine(e.ToString()); }
+        }
+    }
+
+    public class UBX
     {
         public static byte[] header = {0xB5, 0x62};
         public static byte[] id_NAV_POSECEF = { 0x01, 0x01 };
@@ -403,20 +516,40 @@ namespace NinjaScan_GUI
         public static byte[] id_NAV_SOL = { 0x01, 0x06 };
         public static byte[] id_NAV_STATUS = { 0x01, 0x03 };
 
+        public static int length_payload = 0;
+        public static int length_payload_NAV_POSLLH = 28;
+
+        // NAV_POSECE
         public static UInt32 itow;
         public static Int32 ecefX, ecefY, ecefZ;
         public static UInt32 pAcc;
 
+        // NAV_POSLLH
         public static Int32 lon, lat, height; //緯度経度高度
         public static Int32 hMSL; //平均海面高度
         public static UInt32 hAcc, vAcc; //推定精度
 
+        // NAV_SOL
         public static Int32 ftow;
         public static Int16 week;
-        public static byte gpsFix; //0x00=no fix, 0x01=dead reckoning only, 0x02=2d fix, 0x03=3d fix, 0x05=time only fix
+        public static string gpsFix; //0x00=no fix, 0x01=dead reckoning only, 0x02=2d fix, 0x03=3d fix, 0x05=time only fix
         public static byte flags;
 
+        // gpsFix
+        private static byte[] gpsFix_NoFix = new byte[1] { 0x00 };
+        private static byte[] gpsFix_DeadReckoningOnly = new byte[1] { 0x01 };
+        private static byte[] gpsFix_2DFix = new byte[1] { 0x02 };
+        private static byte[] gpsFix_3DFix = new byte[1] { 0x03 };
+        private static byte[] gpsFix_GPSDeadReckoningConbined = new byte[1] { 0x04 };
+        private static byte[] gpsFix_TimeOnlyFix = new byte[1] { 0x05 };
 
+
+        // NAV_STATUS
+        public static byte status_flags;
+        public static byte fixStat;
+        public static byte status_flags2;
+        public static UInt32 ttff;
+        public static UInt32 msss;
 
         public static void Read_NAV_POSECEF(BinaryReader input)
         {
@@ -424,15 +557,65 @@ namespace NinjaScan_GUI
 
         }
 
-        public static void Read_NAV_POSLLH(BinaryReader input)
+        public static void Analysis_NAV_POSLLH(byte[] input, int index_header0)
         {
-            itow = BitConverter.ToUInt32(input.ReadBytes(4), 0);
-            lon = BitConverter.ToInt32(input.ReadBytes(4), 0);
-            lat = BitConverter.ToInt32(input.ReadBytes(4), 0);
-            height = BitConverter.ToInt32(input.ReadBytes(4), 0);
-            hMSL = BitConverter.ToInt32(input.ReadBytes(4), 0);
-            hAcc = BitConverter.ToUInt32(input.ReadBytes(4), 0);
-            vAcc = BitConverter.ToUInt32(input.ReadBytes(4), 0);
+            byte[] byteitow = new byte[4];
+            byte[] bytelon = new byte[4];
+            byte[] bytelat = new byte[4];
+            byte[] byteheight = new byte[4];
+            byte[] bytehMSL = new byte[4];
+            byte[] bytehAcc = new byte[4];
+            byte[] bytevAcc = new byte[4];
+
+            Array.Copy(input, index_header0 + 6, byteitow, 0, 4);
+            Array.Copy(input, index_header0 + 10, bytelon, 0, 4);
+            Array.Copy(input, index_header0 + 14, bytelat, 0, 4);
+            Array.Copy(input, index_header0 + 18, byteheight, 0, 4);
+            Array.Copy(input, index_header0 + 22, bytehMSL, 0, 4);
+            Array.Copy(input, index_header0 + 26, bytehAcc, 0, 4);
+            Array.Copy(input, index_header0 + 30, bytevAcc, 0, 4);
+            
+            itow = BitConverter.ToUInt32(byteitow, 0);
+            lon = BitConverter.ToInt32(bytelon, 0);
+            lat = BitConverter.ToInt32(bytelat, 0);
+            height = BitConverter.ToInt32(byteheight, 0);
+            hMSL = BitConverter.ToInt32(bytehMSL, 0);
+            hAcc = BitConverter.ToUInt32(bytehAcc, 0);
+            vAcc = BitConverter.ToUInt32(bytevAcc, 0);
+        }
+
+        public static void Analysis_NAV_STATUS(byte[] input, int index_header0)
+        {
+            byte[] byteitow = new byte[4];
+            byte[] bytegpsFix = new byte[1];
+            byte[] byteflags = new byte[1];
+            byte[] bytefixStat = new byte[1];
+            byte[] byteflags2 = new byte[1];
+            byte[] bytettff = new byte[4];
+            byte[] bytemsss = new byte[4];
+
+            Array.Copy(input, index_header0 + 6, byteitow, 0, 4);
+            Array.Copy(input, index_header0 + 10, bytegpsFix, 0, 1);
+            Array.Copy(input, index_header0 + 11, byteflags, 0, 1);
+            Array.Copy(input, index_header0 + 12, bytefixStat, 0, 1);
+            Array.Copy(input, index_header0 + 13, byteflags2, 0, 1);
+            Array.Copy(input, index_header0 + 14, bytettff, 0, 4);
+            Array.Copy(input, index_header0 + 18, bytemsss, 0, 4);
+
+            itow = BitConverter.ToUInt32(byteitow, 0);
+            if (bytegpsFix.SequenceEqual(gpsFix_NoFix))
+            {
+                gpsFix = "No Fix";
+            } else if( bytegpsFix.SequenceEqual(gpsFix_2DFix))
+            {
+                gpsFix = "2D Fix";
+            } else if (bytegpsFix.SequenceEqual(gpsFix_3DFix))
+            {
+                gpsFix = "3D Fix";
+            } else if (bytegpsFix.SequenceEqual(gpsFix_TimeOnlyFix))
+            {
+                gpsFix = "Time Only Fix";
+            }
         }
 
     }
