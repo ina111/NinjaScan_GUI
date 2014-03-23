@@ -225,9 +225,9 @@ namespace NinjaScan_GUI
         // OUTPUT data range is -30000 to +300000, FullScale is +-1000uT
 
         public static double cal_mx, cal_my, cal_mz;
-        public static double mean_mx = Math.Pow(2, 16) / 2;
-        public static double mean_my = Math.Pow(2, 16) / 2;
-        public static double mean_mz = Math.Pow(2, 16) / 2;
+        public static double mean_mx = 65535;
+        public static double mean_my = 0;
+        public static double mean_mz = 0;
         public static double fullScale_mag = 1000; // Full Scale ±1000uT
         public static double lsb_mag = 0.1; // sensitivity 0.1uT/LSB
 
@@ -236,9 +236,6 @@ namespace NinjaScan_GUI
             input.ReadBytes(2);
             inner_time = Convert.ToByte(input.ReadByte());
             gps_time = BitConverter.ToUInt32(input.ReadBytes(4), 0);
-            //mx = BitConverter.ToUInt16(input.ReadBytes(2), 0);
-            //my = BitConverter.ToUInt16(input.ReadBytes(2), 0);
-            //mz = BitConverter.ToUInt16(input.ReadBytes(2), 0);
             mx = Read_2byte_BigEndian(input.ReadBytes(2));
             my = Read_2byte_BigEndian(input.ReadBytes(2));
             mz = Read_2byte_BigEndian(input.ReadBytes(2));
@@ -394,6 +391,48 @@ namespace NinjaScan_GUI
             heading = BitConverter.ToUInt16(input.ReadBytes(2), 0);
             roll = BitConverter.ToUInt16(input.ReadBytes(2), 0);
             pitch = BitConverter.ToUInt16(input.ReadBytes(2), 0);
+        }
+
+    }
+
+    public class ubx
+    {
+        public static byte[] header = {0xB5, 0x62};
+        public static byte[] id_NAV_POSECEF = { 0x01, 0x01 };
+        public static byte[] id_NAV_POSLLH = { 0x01, 0x02 };
+        public static byte[] id_NAV_SOL = { 0x01, 0x06 };
+        public static byte[] id_NAV_STATUS = { 0x01, 0x03 };
+
+        public static UInt32 itow;
+        public static Int32 ecefX, ecefY, ecefZ;
+        public static UInt32 pAcc;
+
+        public static Int32 lon, lat, height; //緯度経度高度
+        public static Int32 hMSL; //平均海面高度
+        public static UInt32 hAcc, vAcc; //推定精度
+
+        public static Int32 ftow;
+        public static Int16 week;
+        public static byte gpsFix; //0x00=no fix, 0x01=dead reckoning only, 0x02=2d fix, 0x03=3d fix, 0x05=time only fix
+        public static byte flags;
+
+
+
+        public static void Read_NAV_POSECEF(BinaryReader input)
+        {
+            // 20byteのペイロード以下しかなかったらどうするか
+
+        }
+
+        public static void Read_NAV_POSLLH(BinaryReader input)
+        {
+            itow = BitConverter.ToUInt32(input.ReadBytes(4), 0);
+            lon = BitConverter.ToInt32(input.ReadBytes(4), 0);
+            lat = BitConverter.ToInt32(input.ReadBytes(4), 0);
+            height = BitConverter.ToInt32(input.ReadBytes(4), 0);
+            hMSL = BitConverter.ToInt32(input.ReadBytes(4), 0);
+            hAcc = BitConverter.ToUInt32(input.ReadBytes(4), 0);
+            vAcc = BitConverter.ToUInt32(input.ReadBytes(4), 0);
         }
 
     }

@@ -15,12 +15,15 @@ namespace NinjaScan_GUI
 {
     public partial class Form1 : Form
     {
+        // debug用
+        static System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 
         SerialPort myPort;
         Stream st;
-        StreamWriter csv_A;
-        StreamWriter csv_P;
-        StreamWriter csv_M;
+        StreamWriter csv_A = new StreamWriter(Stream.Null);
+        StreamWriter csv_P = new StreamWriter(Stream.Null);
+        StreamWriter csv_M = new StreamWriter(Stream.Null);
+        FileStream csv_G = new FileStream("garbage.bin", FileMode.Append, FileAccess.Write);
         BinaryWriter ubx_G;
         CancellationTokenSource tokenSource = new CancellationTokenSource();
 
@@ -30,7 +33,7 @@ namespace NinjaScan_GUI
         public static double mx, my, mz;
         public static double press, temp;
         public static double latitude, longitude, altitude;
-
+        
         public Form1()
         {
             InitializeComponent();
@@ -106,8 +109,14 @@ namespace NinjaScan_GUI
                             Consol_Output(br);
                         });
                 }
-                catch
-                { }
+                catch (IOException)
+                {
+                    MessageBox.Show("The port can NOT bet opened.", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (System.UnauthorizedAccessException)
+                {
+                    MessageBox.Show("The port is already opened other application.", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             else
             {
@@ -120,6 +129,9 @@ namespace NinjaScan_GUI
 
         private void Consol_Output(BinaryReader br)
         {
+            string output_folder = textBox2.Text;
+            string file_name = textBox5.Text;
+
             try
             {
                 do
@@ -171,12 +183,25 @@ namespace NinjaScan_GUI
                             Console.Write("[G page]:");
                             Console.Write(G_Page.ubx + "\n");
                         }
+
+                        // USBdumpボタンがONなら非同期にファイル書き込みを行う。
+                        if (buttonUSBStop.Enabled == true)
+                        {
+                            write4bin2csv2(head, csv_A, csv_M, csv_P, csv_G);
+                        }
                     }
 
                 } while (true);
             }
             catch
             { }
+            finally
+            {
+                csv_A.Close();
+                csv_M.Close();
+                csv_P.Close();
+                csv_G.Close();
+            }
         }
 
         /// <summary>
@@ -280,6 +305,7 @@ namespace NinjaScan_GUI
             StreamWriter csv_P = new StreamWriter(P_file, false);
             StreamWriter csv_M = new StreamWriter(M_file, false);
             BinaryWriter ubx_G = new BinaryWriter(File.OpenWrite(G_file));
+
             csv_A.WriteLine("#gpstime,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z");
             csv_M.WriteLine("#gpstime,mag_x,mag_y,mag_z");
             csv_P.WriteLine("#gpstime,press,temp");
@@ -376,62 +402,98 @@ namespace NinjaScan_GUI
                 buttonUSBStart.Enabled = false;
                 buttonUSBStop.Enabled = true;
 
+                File.WriteAllText(A_file, "#gpstime,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z\n");
+                File.WriteAllText(M_file, "#gpstime,mag_x,mag_y,mag_z\n");
+                File.WriteAllText(P_file, "#gpstime,press,temp\n");
                 
-                BinaryReader br = new BinaryReader(st);
-                // バックグラウンド処理
-                var task = Task.Factory.StartNew(() =>
+            }
+
+            //
+            //
+            //
+            csv_A = new StreamWriter(output_folder + "\\" + file_name + "_A.csv", true);
+            csv_M = new StreamWriter(output_folder + "\\" + file_name + "_M.csv", true);
+            csv_P = new StreamWriter(output_folder + "\\" + file_name + "_P.csv", true);
+            csv_G = new FileStream(output_folder + "\\" + file_name + "_G.ubx", FileMode.Append, FileAccess.Write);
+
+        }
+
+        public static void write4bin2CSV(byte head, string output_folder, string file_name)
+        {
+            //sw.Reset();
+            //sw.Start();
+            string A_file = output_folder + "\\" + file_name + "_A.csv";
+            string P_file = output_folder + "\\" + file_name + "_P.csv";
+            string M_file = output_folder + "\\" + file_name + "_M.csv";
+            string G_file = output_folder + "\\" + file_name + ".ubx";
+            //sw.Stop();
+            //Console.WriteLine(sw.Elapsed);
+            try
+            {
+                if (head == A_Page.header)
                 {
-                    // キャンセルされた場合例外をスロー
-                    tokenSource.Token.ThrowIfCancellationRequested();
-
-                    File.WriteAllText(A_file, "#gpstime,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z\n");
-                    File.WriteAllText(M_file, "#gpstime,mag_x,mag_y,mag_z\n");
-                    File.WriteAllText(P_file, "#gpstime,press,temp\n");
-
-                    do
+                    sw.Reset();
+                    sw.Start();
+                    File.AppendAllText(A_file, gpstime.ToString() + ","
+                        + ax.ToString() + "," + ay.ToString() + "," + az.ToString() + ","
+                        + gx.ToString() + "," + gy.ToString() + "," + gz.ToString() + "\n");
+                    sw.Stop();
+                    Console.WriteLine(sw.Elapsed);
+                }
+                else if (head == M_Page.header)
+                {
+                    File.AppendAllText(M_file, gpstime.ToString() + ","
+                        + mx.ToString() + "," + my.ToString() + "," + mz.ToString() + "\n");
+                }
+                else if (head == P_Page.header)
+                {
+                    File.AppendAllText(P_file, gpstime.ToString() + ","
+                        + press.ToString() + "," + temp.ToString() + "\n");
+                }
+                else if (head == G_Page.header)
+                {
+                    using (FileStream stream = new FileStream(G_file, FileMode.Append))
                     {
-                        try
-                        {
-                            // Sylphideプロトコルのheaderで頭出ししないと安定しない。log.datのときは必要ない
-                            if (br.ReadByte() == Sylphide_Protocol.header0 && br.ReadByte() == Sylphide_Protocol.header1)
-                            {
-                                br.ReadBytes(2); // sequence number, not necessary
-                                byte head = br.ReadByte();
-                                if (head == A_Page.header)
-                                {
-                                    A_Page.Read(br);
-                                    File.AppendAllText(A_file, A_Page.gps_time + "," +
-                                                       A_Page.ax + "," + A_Page.ay + "," + A_Page.az + "," +
-                                                       A_Page.gx + "," + A_Page.gy + "," + A_Page.gz + "\n");
-                                }
-                                else if (head == P_Page.header)
-                                {
-                                    P_Page.Read(br);
-                                    File.AppendAllText(P_file, P_Page.gps_time + "," +
-                                                       P_Page.pressure + "," + P_Page.temperature + "\n");
-                                }
-                                else if (head == M_Page.header)
-                                {
-                                    M_Page.Read(br);
-                                    File.AppendAllText(M_file, M_Page.gps_time + "," +
-                                        M_Page.mx + "," + M_Page.my + "," + M_Page.mz + "\n");
-                                }
-                                else if (head == G_Page.header)
-                                {
-                                    BinaryWriter ubx_G = new BinaryWriter(File.OpenWrite(G_file));
-                                    G_Page.Read(br);
-                                    ubx_G.Write(G_Page.ubx); // GPS pageだけubx形式
-                                    ubx_G.Close();
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            Console.Write("AAA");
-                        }
-                    } while (true);
-                },
-                tokenSource.Token);
+                        stream.Write(G_Page.ubx, 0, G_Page.ubx.Length);
+                    }
+                }
+            }
+            catch(IOException)
+            {}
+            catch(System.UnauthorizedAccessException)
+            {
+                Console.WriteLine("CSV writer error");
+            }
+        }
+
+        public static void write4bin2csv2(byte head, StreamWriter asw, StreamWriter msw, StreamWriter psw, FileStream gfs)
+        {
+            try
+            {
+                if (head == A_Page.header)
+                {
+                    asw.WriteLine(gpstime.ToString() + ","
+                        + ax.ToString() + "," + ay.ToString() + "," + az.ToString() + ","
+                        + gx.ToString() + "," + gy.ToString() + "," + gz.ToString());
+                }
+                else if (head == M_Page.header)
+                {
+                    msw.WriteLine(gpstime.ToString() + ","
+                        + mx.ToString() + "," + my.ToString() + "," + mz.ToString());
+                }
+                else if (head == P_Page.header)
+                {
+                    psw.WriteLine(gpstime.ToString() + ","
+                        + press.ToString() + "," + temp.ToString());
+                }
+                else if (head == G_Page.header)
+                {
+                    gfs.Write(G_Page.ubx, 0, G_Page.ubx.Length);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
             }
         }
 
@@ -440,6 +502,11 @@ namespace NinjaScan_GUI
             buttonUSBStart.Enabled = true;
             buttonUSBStop.Enabled = false;
             tokenSource.Cancel();
+
+            csv_A.Close();
+            csv_M.Close();
+            csv_P.Close();
+            csv_G.Close();
         }
 
     }
