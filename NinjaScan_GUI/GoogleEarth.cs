@@ -37,14 +37,15 @@ namespace NinjaScan_GUI
             Object obj_lat = (object)Form1.latitude;
             Object obj_lon = (object)Form1.longitude;
             Object obj_alt = (object)Form1.altitude;
-            object[] args = { 42.498856, 143.433391, 0 };
+            object[] args = { UBX.lat * Math.Pow(10, -7), UBX.lon * Math.Pow(10, -7), UBX.height };
             webBrowser1.Document.InvokeScript("js_func", args);
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
             labelGPSFix.Text = "STATUS: " + UBX.gpsFix;
-            labelGPSLLH.Text = "ToW: " + UBX.itow + "\nlatitude: " + UBX.lat + "  longitude: " + UBX.lon;
+            labelGPSLLH.Text = "latitude: " + UBX.lat + "  longitude: " + UBX.lon;
+            labelTIME.Text = "UTC TIME: " + UBX.tow_hour + ":" + UBX.tow_min + ":" + (UBX.tow_sec).ToString("F1");
         }
     }
 }

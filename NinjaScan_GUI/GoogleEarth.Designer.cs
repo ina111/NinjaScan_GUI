@@ -36,6 +36,7 @@
             this.labelGPSFix = new System.Windows.Forms.Label();
             this.labelGPSLLH = new System.Windows.Forms.Label();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.labelTIME = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -57,6 +58,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.labelTIME);
             this.panel1.Controls.Add(this.labelGPSLLH);
             this.panel1.Controls.Add(this.labelGPSFix);
             this.panel1.Controls.Add(this.button1);
@@ -88,7 +90,7 @@
             // labelGPSFix
             // 
             this.labelGPSFix.AutoSize = true;
-            this.labelGPSFix.Location = new System.Drawing.Point(198, 18);
+            this.labelGPSFix.Location = new System.Drawing.Point(194, 8);
             this.labelGPSFix.Name = "labelGPSFix";
             this.labelGPSFix.Size = new System.Drawing.Size(55, 12);
             this.labelGPSFix.TabIndex = 1;
@@ -97,7 +99,7 @@
             // labelGPSLLH
             // 
             this.labelGPSLLH.AutoSize = true;
-            this.labelGPSLLH.Location = new System.Drawing.Point(306, 18);
+            this.labelGPSLLH.Location = new System.Drawing.Point(194, 24);
             this.labelGPSLLH.Name = "labelGPSLLH";
             this.labelGPSLLH.Size = new System.Drawing.Size(77, 12);
             this.labelGPSLLH.TabIndex = 2;
@@ -107,6 +109,15 @@
             // 
             this.timer1.Enabled = true;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // labelTIME
+            // 
+            this.labelTIME.AutoSize = true;
+            this.labelTIME.Location = new System.Drawing.Point(423, 13);
+            this.labelTIME.Name = "labelTIME";
+            this.labelTIME.Size = new System.Drawing.Size(36, 12);
+            this.labelTIME.TabIndex = 3;
+            this.labelTIME.Text = "Time: ";
             // 
             // GoogleEarth
             // 
@@ -132,6 +143,7 @@
         private System.Windows.Forms.Label labelGPSFix;
         private System.Windows.Forms.Label labelGPSLLH;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Label labelTIME;
 
     }
 }

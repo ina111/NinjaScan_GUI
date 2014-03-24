@@ -401,7 +401,7 @@ namespace NinjaScan_GUI
         public static void Read(BinaryReader input)
         {
             ubx = input.ReadBytes(31);
-            Console.WriteLine(object_offset);
+            Console.WriteLine("Object offset: " + object_offset);
             Array.Copy(ubx, 0, analysisObject, object_offset, 31); //31バイトをbuffにコピー,object_offsetがあれば、その分オフセット
         }
 
@@ -445,8 +445,16 @@ namespace NinjaScan_GUI
                         Array.Copy(input, index_header0 + 4, byte_index_payload_length, 0, 2);
                         UBX.length_payload = BitConverter.ToUInt16(byte_index_payload_length, 0);
 
+                        // ペイロード長さが1000を超える場合はヘッダを適当なものに読み間違えているので、廃棄
+                        if ( UBX.length_payload > 1000)
+                        {
+                            object_offset = 0;
+                            analysisObject = new byte[1000];
+                            return;
+                        }
 
-                        if (31 - 4 - index_header0 + object_offset - UBX.length_payload > 0)
+
+                        if (index_header0 + UBX.length_payload + 8 < object_offset + 31)
                         {
                             // IDによる場合分け
                             if (id_header.SequenceEqual(UBX.id_NAV_POSLLH))
@@ -458,14 +466,30 @@ namespace NinjaScan_GUI
                             {
                                 UBX.Analysis_NAV_STATUS(input, index_header0);
                             }
-                            object_offset = 0;
+                            else if ( id_header.SequenceEqual(UBX.id_NAV_SOL))
+                            {
+
+                            }
+                            else if (id_header.SequenceEqual(UBX.id_NAV_TIMEUTC))
+                            {
+                                UBX.Analysis_NAV_TIMEUTC(input, index_header0);
+                            }
+
+                            byte[] analysisObject_buff = new byte[1000];
+                            Array.Copy(analysisObject, index_header0 + UBX.length_payload + 8, analysisObject_buff, 0, 31);
+                            object_offset = (object_offset + 31) - (index_header0 + UBX.length_payload + 8);
+
+
                             analysisObject = new byte[1000];
+                            Array.Copy(analysisObject_buff, 31, analysisObject, 0, 31);
                             return;
                         }
                         else
                         {
+                            Console.WriteLine("Payload length: " + (UBX.length_payload));
                             object_offset += 31; // offsetは32byteからG_head分を除いた31byteを足していく
                             return;
+                            
                         }
 
                     }
@@ -511,21 +535,24 @@ namespace NinjaScan_GUI
     public class UBX
     {
         public static byte[] header = {0xB5, 0x62};
-        public static byte[] id_NAV_POSECEF = { 0x01, 0x01 };
         public static byte[] id_NAV_POSLLH = { 0x01, 0x02 };
-        public static byte[] id_NAV_SOL = { 0x01, 0x06 };
         public static byte[] id_NAV_STATUS = { 0x01, 0x03 };
+        public static byte[] id_NAV_DOP = { 0x01, 0x04 };
+        public static byte[] id_NAV_SOL = { 0x01, 0x06 };
+        public static byte[] id_NAV_VELNED = { 0x01, 0x12 };
+        public static byte[] id_NAV_TIMEGPS = { 0x01, 0x20 };
+        public static byte[] id_NAV_TIMEUTC = { 0x01, 0x21 };
+        public static byte[] id_NAV_SVINFO = { 0x01, 0x30 };
+        public static byte[] id_RXM_RAW = { 0x02, 0x10 };
+        public static byte[] id_RXM_SFRB = { 0x02, 0x31 };
+        public static byte[] id_RXM_EPH = { 0x02, 0x31 };
+        public static byte[] id_AID_HUI = { 0x0B, 0x02 };
 
         public static int length_payload = 0;
-        public static int length_payload_NAV_POSLLH = 28;
-
-        // NAV_POSECE
-        public static UInt32 itow;
-        public static Int32 ecefX, ecefY, ecefZ;
-        public static UInt32 pAcc;
 
         // NAV_POSLLH
-        public static Int32 lon, lat, height; //緯度経度高度
+        public static UInt32 itow;
+        public static Int32 lon, lat, height; //緯度経度高度 緯度経度はe-7 deg 高度はmm
         public static Int32 hMSL; //平均海面高度
         public static UInt32 hAcc, vAcc; //推定精度
 
@@ -534,6 +561,13 @@ namespace NinjaScan_GUI
         public static Int16 week;
         public static string gpsFix; //0x00=no fix, 0x01=dead reckoning only, 0x02=2d fix, 0x03=3d fix, 0x05=time only fix
         public static byte flags;
+        public static Int32 ecefX;
+        public static Int32 ecefY;
+        public static Int32 ecefZ;
+        public static Int32 ecefVX;
+        public static Int32 ecefVY;
+        public static Int32 ecefVZ;
+        public static UInt32 numSV;
 
         // gpsFix
         private static byte[] gpsFix_NoFix = new byte[1] { 0x00 };
@@ -543,13 +577,26 @@ namespace NinjaScan_GUI
         private static byte[] gpsFix_GPSDeadReckoningConbined = new byte[1] { 0x04 };
         private static byte[] gpsFix_TimeOnlyFix = new byte[1] { 0x05 };
 
-
         // NAV_STATUS
         public static byte status_flags;
         public static byte fixStat;
         public static byte status_flags2;
         public static UInt32 ttff;
         public static UInt32 msss;
+
+        // NAV_TIMEUTC
+        public static UInt16 year;
+        public static byte month;
+        public static byte day;
+        public static byte hour;
+        public static byte min;
+        public static byte sec;
+
+        // Time
+        public static UInt32 tow_day;
+        public static UInt32 tow_hour;
+        public static UInt32 tow_min;
+        public static double tow_sec;
 
         public static void Read_NAV_POSECEF(BinaryReader input)
         {
@@ -582,6 +629,8 @@ namespace NinjaScan_GUI
             hMSL = BitConverter.ToInt32(bytehMSL, 0);
             hAcc = BitConverter.ToUInt32(bytehAcc, 0);
             vAcc = BitConverter.ToUInt32(bytevAcc, 0);
+
+            TOW2Time(itow);
         }
 
         public static void Analysis_NAV_STATUS(byte[] input, int index_header0)
@@ -616,6 +665,51 @@ namespace NinjaScan_GUI
             {
                 gpsFix = "Time Only Fix";
             }
+
+            TOW2Time(itow);
+        }
+
+        public static void Analysis_NAV_TIMEUTC(byte[] input, int index_header0)
+        {
+            byte[] byteitow = new byte[4];
+            byte[] byteyear = new byte[2];
+            byte[] bytemonth = new byte[1];
+            byte[] byteday = new byte[1];
+            byte[] bytehour = new byte[1];
+            byte[] bytemin = new byte[1];
+            byte[] bytesec = new byte[1];
+
+            Array.Copy(input, index_header0 + 6, byteitow, 0, 4);
+            Array.Copy(input, index_header0 + 18, byteyear, 0, 2);
+            Array.Copy(input, index_header0 + 20, bytemonth, 0, 1);
+            Array.Copy(input, index_header0 + 21, byteday, 0, 1);
+            Array.Copy(input, index_header0 + 22, bytehour, 0, 1);
+            Array.Copy(input, index_header0 + 23, bytemin, 0, 1);
+            Array.Copy(input, index_header0 + 24, bytesec, 0, 1);
+
+            itow = BitConverter.ToUInt32(byteitow, 0);
+            year = BitConverter.ToUInt16(byteyear, 0);
+            month = bytemonth[0];
+            day = byteday[0];
+            hour = bytehour[0];
+            min = bytemin[0];
+            sec = bytesec[0];
+
+            TOW2Time(itow);
+        }
+
+        // itow(=Time of Weeks)から時刻を求める
+        // http://www.novatel.com/support/knowledge-and-learning/published-papers-and-documents/unit-conversions/
+        private static void TOW2Time(UInt32 iToW)
+        {
+            double remainder_tow_day, remainder_tow_hour, remainder_tow_min;
+            tow_day = iToW / 1000 / 86400;
+            remainder_tow_day = (double)(iToW) / 1000.0 / 86400.0 - tow_day;
+            tow_hour = (UInt32)(remainder_tow_day * 86400 / 3600);
+            remainder_tow_hour = (remainder_tow_day * 86400 / 3600) - tow_hour;
+            tow_min = (UInt32)(remainder_tow_hour * 3600 / 60);
+            remainder_tow_min = (remainder_tow_hour * 3600 / 60) - tow_min;
+            tow_sec = remainder_tow_min * 60;
         }
 
     }

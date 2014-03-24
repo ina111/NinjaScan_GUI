@@ -11,6 +11,7 @@
   function initCB(instance) {
   ge = instance;
   ge.getWindow().setVisibility(true);
+  ge.getNavigationControl().setVisibility(ge.VISIBILITY_SHOW);
   ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, true);
   }
   function failureCB(errorCode) {
@@ -21,7 +22,7 @@
   var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
   lookAt.setLatitude(lat);
   lookAt.setLongitude(lon);
-  lookAt.setRange(3000.0);
+  lookAt.setRange(1000.0);
   ge.getView().setAbstractView(lookAt);
 
   var placemark = ge.createPlacemark('');
