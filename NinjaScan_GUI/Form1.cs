@@ -343,9 +343,9 @@ namespace NinjaScan_GUI
             StreamWriter csv_M = new StreamWriter(M_file, false);
             BinaryWriter ubx_G = new BinaryWriter(File.OpenWrite(G_file));
 
-            csv_A.WriteLine("#gpstime,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z");
-            csv_M.WriteLine("#gpstime,mag_x,mag_y,mag_z");
-            csv_P.WriteLine("#gpstime,press,temp");
+            csv_A.WriteLine("#gpstime,acc_xa(g),acc_y(g),acc_z(g),gyro_x(dps),gyro_y(dps),gyro_z(dps)");
+            csv_M.WriteLine("#gpstime,mag_x(uT),mag_y(uT),mag_z(uT)");
+            csv_P.WriteLine("#gpstime,press(Pa),temp(deg)");
 
             buttonSDConvert.Enabled = false;
 
@@ -360,21 +360,28 @@ namespace NinjaScan_GUI
                         if (head == A_Page.header)
                         {
                             A_Page.Read(br);
+                            //csv_A.WriteLine(A_Page.gps_time + "," +
+                            //    A_Page.ax + "," + A_Page.ay + "," + A_Page.az + "," +
+                            //    A_Page.gx + "," + A_Page.gy + "," + A_Page.gz);
                             csv_A.WriteLine(A_Page.gps_time + "," +
-                                A_Page.ax + "," + A_Page.ay + "," + A_Page.az + "," +
-                                A_Page.gx + "," + A_Page.gy + "," + A_Page.gz);
+                                A_Page.cal_ax + "," + A_Page.cal_ay + "," + A_Page.cal_az +
+                                A_Page.cal_gx + "," + A_Page.cal_gy + "," + A_Page.cal_gz);
                         }
                         else if (head == P_Page.header)
                         {
                             P_Page.Read(br);
+                            //csv_P.WriteLine(P_Page.gps_time + "," +
+                            //    P_Page.pressure + "," + P_Page.temperature);
                             csv_P.WriteLine(P_Page.gps_time + "," +
-                                P_Page.pressure + "," + P_Page.temperature);
+                                P_Page.pressure + "," + (double)P_Page.temperature * 0.01);
                         }
                         else if (head == M_Page.header)
                         {
                             M_Page.Read(br);
+                            //csv_M.WriteLine(M_Page.gps_time + "," +
+                            //    M_Page.mx + "," + M_Page.my + "," + M_Page.mz);
                             csv_M.WriteLine(M_Page.gps_time + "," +
-                                M_Page.mx + "," + M_Page.my + "," + M_Page.mz);
+                                M_Page.cal_mx + "," + M_Page.cal_my + "," + M_Page.cal_mz);
                         }
                         else if (head == G_Page.header)
                         {
