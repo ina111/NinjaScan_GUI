@@ -59,9 +59,16 @@
   <PropertyGroup>
     <SignManifests>true</SignManifests>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>NinjaScanLogo.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL" />
-    <Reference Include="OpenTK.GLControl, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL" />
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenTK.1.1.1508.5724\lib\NET40\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK.GLControl, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenTK.GLControl.1.1.1508.5724\lib\NET40\OpenTK.GLControl.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -76,12 +83,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AHRS\MadgwickAHRS.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Cube3D.cs" />
     <Compile Include="GoogleEarth.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="GoogleEarth.Designer.cs">
       <DependentUpon>GoogleEarth.cs</DependentUpon>
     </Compile>
+    <Compile Include="AttiPlot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AttiPlot.Designer.cs">
+      <DependentUpon>AttiPlot.cs</DependentUpon>
+    </Compile>
+    <Compile Include="NinjaScan.cs" />
     <Compile Include="PressPlot.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -130,10 +148,14 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="License-LGPL.txt" />
+    <Content Include="NinjaScanLogo.ico" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="GoogleEarth.resx">
       <DependentUpon>GoogleEarth.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AttiPlot.resx">
+      <DependentUpon>AttiPlot.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PressPlot.resx">
       <DependentUpon>PressPlot.cs</DependentUpon>

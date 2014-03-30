@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ZedGraph;
+using NinjaScan;
 
 namespace NinjaScan_GUI
 {
@@ -16,6 +17,26 @@ namespace NinjaScan_GUI
         int tickStart = 0;
         GraphPane gyroPane;
 
+        static int average_length = 200;
+        double[] array_x = new double[average_length];
+        double[] array_y = new double[average_length];
+        double[] array_z = new double[average_length];
+        double mean_x, mean_y, mean_z;
+        int average_pointer = 0;
+
+        // 移動平均を更新、観測値を入力し、mean_Xを更新
+        private void SMA_Update(double obj_x, double obj_y, double obj_z)
+        {
+            array_x[average_pointer] = obj_x;
+            array_y[average_pointer] = obj_y;
+            array_z[average_pointer] = obj_z;
+            if (average_pointer + 1 >= average_length) average_pointer = -1; // 配列外に出るなら-1に戻す
+            mean_x += (obj_x - array_x[average_pointer + 1]) / average_length;
+            mean_y += (obj_y - array_y[average_pointer + 1]) / average_length;
+            mean_z += (obj_z - array_z[average_pointer + 1]) / average_length;
+            average_pointer++;
+
+        }
 
         public GyroPlot()
         {
@@ -111,6 +132,13 @@ namespace NinjaScan_GUI
             zedGraphControl1.AxisChange();
             // Force a redraw
             zedGraphControl1.Invalidate();
+
+
+            // 平均の表示
+            SMA_Update(Form1.gx, Form1.gy, Form1.gz);
+            labelx.Text = "x (deg/s) :" + mean_x.ToString("F5");
+            labely.Text = "y (deg/s) :" + mean_y.ToString("F5");
+            labelz.Text = "z (deg/s) :" + mean_z.ToString("F5");
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)
@@ -173,6 +201,13 @@ namespace NinjaScan_GUI
             {
                 img.Save(sfd.FileName, System.Drawing.Imaging.ImageFormat.Png);
             }
+        }
+
+        private void buttonSetDrift_Click(object sender, EventArgs e)
+        {
+            A_Page.drift_gx += mean_x;
+            A_Page.drift_gy += mean_y;
+            A_Page.drift_gz += mean_z;
         }
 
 

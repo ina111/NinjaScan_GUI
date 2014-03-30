@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.comboBoxCOM = new System.Windows.Forms.ComboBox();
             this.buttonConnect = new System.Windows.Forms.Button();
             this.butonGyro = new System.Windows.Forms.Button();
@@ -126,23 +127,23 @@
             // 
             // button3DCube
             // 
-            this.button3DCube.Enabled = false;
             this.button3DCube.Location = new System.Drawing.Point(8, 56);
             this.button3DCube.Name = "button3DCube";
             this.button3DCube.Size = new System.Drawing.Size(125, 23);
             this.button3DCube.TabIndex = 7;
             this.button3DCube.Text = "3D Cube";
             this.button3DCube.UseVisualStyleBackColor = true;
+            this.button3DCube.Click += new System.EventHandler(this.button3DCube_Click);
             // 
             // buttonAtti
             // 
-            this.buttonAtti.Enabled = false;
             this.buttonAtti.Location = new System.Drawing.Point(154, 56);
             this.buttonAtti.Name = "buttonAtti";
             this.buttonAtti.Size = new System.Drawing.Size(125, 23);
             this.buttonAtti.TabIndex = 8;
             this.buttonAtti.Text = "attitude";
             this.buttonAtti.UseVisualStyleBackColor = true;
+            this.buttonAtti.Click += new System.EventHandler(this.buttonAtti_Click);
             // 
             // label2
             // 
@@ -393,6 +394,7 @@
             this.Controls.Add(this.groupBoxSD);
             this.Controls.Add(this.groupBoxPort);
             this.Controls.Add(this.groupBoxPlot);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Sylphide Viewer";
             this.groupBoxPlot.ResumeLayout(false);

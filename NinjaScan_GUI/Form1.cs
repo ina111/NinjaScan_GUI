@@ -10,6 +10,10 @@ using System.Windows.Forms;
 using System.IO.Ports;
 using System.IO;
 using System.Threading;
+using OpenTK;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
+using NinjaScan;
 
 namespace NinjaScan_GUI
 {
@@ -24,6 +28,8 @@ namespace NinjaScan_GUI
         StreamWriter csv_P = new StreamWriter(Stream.Null);
         StreamWriter csv_M = new StreamWriter(Stream.Null);
         FileStream csv_G = new FileStream("garbage.bin", FileMode.Append, FileAccess.Write);
+
+        public static AHRS.MadgwickAHRS AHRS = new AHRS.MadgwickAHRS(1f / 100f, 0.1f);
 
         public static double gpstime;
         public static double ax, ay, az;
@@ -64,10 +70,24 @@ namespace NinjaScan_GUI
             pp.Show();
         }
 
+        private void buttonAtti_Click(object sender, EventArgs e)
+        {
+            AttiPlot atp = new AttiPlot();
+            atp.Show();
+        }
+
         private void buttonMap_Click(object sender, EventArgs e)
         {
             GoogleEarth ge = new GoogleEarth();
             ge.Show();
+        }
+
+        private void button3DCube_Click(object sender, EventArgs e)
+        {
+            using(Cube3D c3d = new Cube3D())
+            {
+                c3d.Run(30.0);
+            }
         }
 
 
@@ -160,6 +180,9 @@ namespace NinjaScan_GUI
                             gx = A_Page.cal_gx;
                             gy = A_Page.cal_gy;
                             gz = A_Page.cal_gz;
+                            AHRS.Update((float)gx / 180 * (float)Math.PI, (float)(gy / 180 * Math.PI), (float)(gz / 180 * Math.PI), (float)ax, (float)ay, (float)az);
+                            //AHRS.Update((float)gx, (float)gy, (float)gz, (float)ax, (float)ay, (float)az, (float)mx, (float)my, (float)mz);
+                            AHRS.Quaternion2Euler(AHRS.Quaternion);
 
                         }
                         else if (head == P_Page.header)
@@ -473,6 +496,10 @@ namespace NinjaScan_GUI
             csv_P.Close();
             csv_G.Close();
         }
+
+
+
+
 
     }
 }
