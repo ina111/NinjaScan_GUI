@@ -46,6 +46,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestCertificateThumbprint>931A368CC27CF73995FB9B44FE4E15838B114FD3</ManifestCertificateThumbprint>
@@ -61,6 +63,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>NinjaScanLogo.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="MathNet.Numerics">
@@ -146,6 +151,7 @@
     <None Include="App.config" />
     <None Include="NinjaScan_GUI_一時キー.pfx" />
     <None Include="packages.config" />
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="GoogleEarth.html">
@@ -199,6 +205,14 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(TargetPath)" "$(ProjectDir)\bin\NinjaScan_GUI_Release"
+copy "$(TargetDir)\OpenTK.dll" "$(ProjectDir)\bin\NinjaScan_GUI_Release"
+copy "$(TargetDir)\OpenTK.GLControl.dll" "$(ProjectDir)\bin\NinjaScan_GUI_Release"
+copy "$(TargetDir)\ZedGraph.dll" "$(ProjectDir)\bin\NinjaScan_GUI_Release"
+copy "$(TargetDir)\GoogleEarth.html" "$(ProjectDir)\bin\NinjaScan_GUI_Release"
+copy "$(TargetDir)\MathNet.Numerics.dll" "$(ProjectDir)\bin\NinjaScan_GUI_Release"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
