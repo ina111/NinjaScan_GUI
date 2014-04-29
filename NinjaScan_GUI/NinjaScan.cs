@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.IO.Ports;
 using System.Windows.Forms;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace NinjaScan
 {
@@ -16,8 +17,8 @@ namespace NinjaScan
     {
         public static byte header0 = 0xF7;
         public static byte header1 = 0xE0;
-        public static byte sequence;
-        public static byte[] crc16;
+        public byte sequence;
+        public byte[] crc16;
     }
 
     /// <summary>
@@ -108,11 +109,11 @@ namespace NinjaScan
         // すごいロガーとその他Sylphide形式のものではxyzの順番が違うので気をつけること
         public static UInt16 inner_time;
         public static UInt32 gps_time;
-        public static UInt16 mx, my, mz; // uT
+        public static Int16 mx, my, mz; // uT
         // OUTPUT data range is -30000 to +300000, FullScale is +-1000uT
 
         public static double cal_mx, cal_my, cal_mz;
-        public static double zero_mx = 65535;
+        public static double zero_mx = 0;
         public static double zero_my = 0;
         public static double zero_mz = 0;
         public static double fullScale_mag = 1000; // Full Scale ±1000uT
@@ -137,12 +138,50 @@ namespace NinjaScan
             cal_mz = (mz - zero_mz) * lsb_mag;
         }
 
-        private static UInt16 Read_2byte_BigEndian(byte[] data)
+        private static Int16 Read_2byte_BigEndian(byte[] data)
         {
             //Big Endianな2バイトのデータをBitConverterできるように2バイトのリトルエンディアンな
             //byte[] 配列に変換する
             byte[] buffer = { data[1], data[0] };
-            return BitConverter.ToUInt16(buffer, 0);
+            Int16 output = BitConverter.ToInt16(buffer, 0);
+            return output;
+            //return BitConverter.ToUInt16(buffer, 0);
+        }
+
+        /// <summary>
+        /// http://www.fujikura.co.jp/rd/gihou/backnumber/pages/__icsFiles/afieldfile/2012/11/08/122_R8.pdf
+        /// 
+        /// </summary>
+        private static void Calibration()
+        {
+            // オフセット、全磁力を初期化
+            double offset_x = 0;
+            double offset_y = 0;
+            double offset_z = 0;
+            double total_magnetic_force = 0; // 全磁力
+            double alpha = 1.0;
+
+            // 共分散行列を初期化
+            DenseMatrix covariance = new DenseMatrix(4, 4, new[] {alpha, 0, 0, 0,
+                                                                  0, alpha, 0, 0,
+                                                                  0, 0, alpha, 0,
+                                                                  0, 0, 0, alpha});
+
+            // 磁気データとオフセット、全磁力を使用し、誤差関数eを計算する
+            double A = Math.Pow(cal_mx - offset_x, 2) +
+                       Math.Pow(cal_my - offset_y, 2) +
+                       Math.Pow(cal_my - offset_y, 2);
+            double B = Math.Pow(total_magnetic_force, 2);
+            double e = A - B;
+
+            // 誤差関数e、磁気データ、共分散行列を使用し、オフセット残渣ηを計算する
+
+
+            // 磁気データを使用し、共分散行列Pを更新する
+
+            // オフセット残渣ηをオフセットに加算し、最新のオフセットとする
+
+
         }
     }
 
@@ -303,7 +342,7 @@ namespace NinjaScan
         public static void Read(BinaryReader input)
         {
             ubx = input.ReadBytes(31);
-            Console.WriteLine("Object offset: " + object_offset);
+            //Console.WriteLine("Object offset: " + object_offset);
             Array.Copy(ubx, 0, analysisObject, object_offset, 31); //31バイトをbuffにコピー,object_offsetがあれば、その分オフセット
         }
 

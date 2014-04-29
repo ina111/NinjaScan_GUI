@@ -205,9 +205,9 @@ namespace NinjaScan_GUI
 
         private void buttonSetDrift_Click(object sender, EventArgs e)
         {
-            A_Page.drift_gx += mean_x;
-            A_Page.drift_gy += mean_y;
-            A_Page.drift_gz += mean_z;
+            Form1.drift_gx += mean_x;
+            Form1.drift_gy += mean_y;
+            Form1.drift_gz += mean_z;
         }
 
 

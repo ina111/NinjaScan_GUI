@@ -31,13 +31,16 @@ namespace NinjaScan_GUI
 
         public static AHRS.MadgwickAHRS AHRS = new AHRS.MadgwickAHRS(1f / 100f, 0.1f);
 
+
         public static double gpstime;
         public static double ax, ay, az;
         public static double gx, gy, gz;
+        public static double drift_gx, drift_gy, drift_gz;
         public static double mx, my, mz;
         public static double press, temp;
         public static double latitude, longitude, altitude;
-        
+
+                
         public Form1()
         {
             InitializeComponent();
@@ -98,6 +101,7 @@ namespace NinjaScan_GUI
 
         private void buttonCOMlist_Click(object sender, EventArgs e)
         {
+            comboBoxCOM.SelectedItem = null;
             comboBoxCOM.Items.Clear();
             string[] ports = SerialPort.GetPortNames();
             comboBoxCOM.Items.AddRange(ports);
@@ -180,6 +184,9 @@ namespace NinjaScan_GUI
                             gx = A_Page.cal_gx;
                             gy = A_Page.cal_gy;
                             gz = A_Page.cal_gz;
+                            A_Page.drift_gx = drift_gx;
+                            A_Page.drift_gy = drift_gy;
+                            A_Page.drift_gz = drift_gz;
                             AHRS.Update((float)gx / 180 * (float)Math.PI, (float)(gy / 180 * Math.PI), (float)(gz / 180 * Math.PI), (float)ax, (float)ay, (float)az);
                             //AHRS.Update((float)gx, (float)gy, (float)gz, (float)ax, (float)ay, (float)az, (float)mx, (float)my, (float)mz);
                             AHRS.Quaternion2Euler(AHRS.Quaternion);
@@ -233,7 +240,7 @@ namespace NinjaScan_GUI
             }
         }
 
-        private static void writeFrombinTocsv(byte head, StreamWriter asw, StreamWriter msw, StreamWriter psw, FileStream gfs)
+        private void writeFrombinTocsv(byte head, StreamWriter asw, StreamWriter msw, StreamWriter psw, FileStream gfs)
         {
             try
             {
@@ -383,11 +390,11 @@ namespace NinjaScan_GUI
                         if (head == A_Page.header)
                         {
                             A_Page.Read(br);
-                            //csv_A.WriteLine(A_Page.gps_time + "," +
-                            //    A_Page.ax + "," + A_Page.ay + "," + A_Page.az + "," +
-                            //    A_Page.gx + "," + A_Page.gy + "," + A_Page.gz);
+                            //csv_A.WriteLine(A_Page..gps_time + "," +
+                            //    A_Page..ax + "," + A_Page..ay + "," + A_Page..az + "," +
+                            //    A_Page..gx + "," + A_Page..gy + "," + A_Page.gz);
                             csv_A.WriteLine(A_Page.gps_time + "," +
-                                A_Page.cal_ax + "," + A_Page.cal_ay + "," + A_Page.cal_az +
+                                A_Page.cal_ax + "," + A_Page.cal_ay + "," + A_Page.cal_az + "," + 
                                 A_Page.cal_gx + "," + A_Page.cal_gy + "," + A_Page.cal_gz);
                         }
                         else if (head == P_Page.header)
