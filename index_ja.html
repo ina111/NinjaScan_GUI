@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -30,7 +30,6 @@
   }(document, 'script', 'facebook-jssdk'));</script>
   <!-- Facebook JavaScript SDK-->
 
-
  	<div class="container">
   	 <div class="navbar navbar-default" role="navigation">
       <div class="container-fluid">
@@ -50,8 +49,8 @@
             <li><a href="#download">Download</a></li>
           </ul>
 	      <ul class="nav navbar-nav navbar-right">
-	      	<li class="active"><a href="index.html">English</a></li>
-    	    <li><a href="index_ja.html">Japanese</a></li>
+	      	<li><a href="index.html">English</a></li>
+    	    <li class="active"><a href="index_ja.html">日本語</a></li>
        	  </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -64,16 +63,13 @@
       <!-- Main jumbotron for a primary marketing message or call to action -->
       <div class="jumbotron">
         <h1>Inaprop</h1>
-        <p>Inaprop is free software for the design and analysis of Low Reynolds number free-tip propellers. </p>
+        <p>Inaprop is free software for the design and analysis of Low Reinolds number free-tip propellers. </p>
         <p></p>
       </div>
     </div><!-- /.container -->
 
-    
-
     <div class="container">
-
-      <div class="social_btn">
+        <div class="social_btn">
         <div class="twitter">
           <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://inaprop.ina111.org/">Tweet</a>
           <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
@@ -83,18 +79,18 @@
         </div>
       </div>
 
-      <div class="page-header" id="about">
-        	<h2>About Inaprop</h2>
+
+    	<div class="page-header" id="about">
+        	<h2>Inapropについて</h2>
      	</div>
      	<p>
-     	Inaprop is free software for the design and analysis of Low Reynolds number free-tip propellers. </p>
+     	Inapropは空気中の自由端（ダクトなどが付いていないタイプ）のプロペラの設計プログラムです。主に人力飛行機などの低レイノルズ領域での設計を念頭にいれています。</p>
      	<p>
-     	Inaprop has three design methods which are Vortex methos, Larrabee method and Adkins Liebeck method(BEM:Blade Element Momentum method).
-     	Analysis routine is not implementation yet. Inaprop function is not enough yet.And there is an excellent rotor desing and analysis software 'XROTOR', please use there.</p>
+     	Inapropは渦法、Larrabeeの手法、Adkins Liebeckの手法（翼素運動量理論）という３つの設計法で設計することが可能です。設計点以外での性能解析ルーチンも付ける予定ですが、未実装です。まだ未完成ですので、実用にはXROTORなどの使用をオススメしています。</p>
      	<ul>
-     		<li>Design of minimum indeced loss propeller(Larrabee, Adkins & Liebeck method)</li>
-     		<li>Desing of minimum loss propeller(vortex methos)</li>
-     		<li>(Analysis and prediction of preformance curves for a given OpenProp optimized rotor design) future work</li>
+     		<li>誘導損失最小のプロペラの設計(Larrabee, Adkins & Liebeck method)</li>
+     		<li>抗力最小のプロペラの設計(vortex methos)</li>
+     		<li>プロペラ性能解析（未実装）</li>
    		</ul>
         <div Align="center">
             <img src="pic/inaprop.png" width="500">
@@ -104,18 +100,18 @@
     	<div class="page-header" id="download">
         	<h2>Download</h2>
      	</div>
-     	<p>The current version can be douwnloaded here</p>
-        <p>Current version is 0.55</p>
+     	<p>最新のバージョンは以下からダウンロード出来ます。</p>
+        <p>現在のバージョンは0.55</p>
      	<p><a type="button" class="btn btn-lg btn-default" href="https://github.com/ina111/Inaprop">Github Page</a>
     	<a type="button" class="btn btn-lg btn-primary" href="Inaprop.zip">Download</a></p>
-    	<h3>Required</h3>
+    	<h3>必要なもの</h3>
         <p>OS: Windows vista/7/8.1</p>
     	<p><a href="http://www.microsoft.com/ja-jp/download/details.aspx?id=17851">Microsoft .NET Framework 4</a></p>
 
 		<div class="page-header">
-        	<h2>References</h2>
+        	<h2>参照</h2>
      	</div>
-        <h3>Vortex method</h3>
+        <h3>渦法 Vortex method</h3>
      	<ul>
             <li>Harada,"Design of propeller in low Reynolds number range",JAXA-RR-06-032, 1-13, 2007-03
             <a href="http://repository.tksc.jaxa.jp/pl/dr/AA0063471000/en">JAXA Repository</a></li>
@@ -149,28 +145,28 @@
         </ul>
 
         <div class="page-header">
-            <h2>Alternatives</h2>
+            <h2>代わりとなるもの</h2>
         </div>
-        <p>Below are alternatives to Inaprop and my recommendated open-source products.
+        <p>以下のものはInapropの代わりとして使えるオススメのソフトウェアです。
         </p>
         <h3>XROTOR</h3>
-        <p>XROTOR is an interactive program for the design and analysis of ducted and free-tip propellers and windmills</p>
+        <p>ダクト付きや自由端のプロペラ、風車の設計解析のための対話的プログラム。推奨。</p>
         <a href="http://web.mit.edu/drela/Public/web/xrotor/">XROTOR</a>
         <h3>DCDF</h3>
-        <p>DCDF is Dcuted Fan Design Code</p>
+        <p>ダクト付きファンの設計解析の対話的プログラム。</p>
         <a href="http://web.mit.edu/drela/Public/web/dfdc/">DCDF</a>
         <p></p>
         <h3>QPROP/QMIL</h3>
-        <p>QPROP/QMIL are design and analysis program for predictiong the preformance of propeller-motor or windmill-generator combinations</p>
+        <p>モーターとプロペラ、風車と発電機の組み合わせの性能予測プログラム。QMILによってプロペラの設計も可能。</p>
         <a href="http://web.mit.edu/drela/Public/web/qprop/">QPROP/QMIL</a>
         <h3>JBLADE</h3>
-        <p>JBLADE is a propeller design and analysis code besed on QBLADE and XFLR5</p>
+        <p>XFLR5とQBLADEを元にしたプロペラの設計解析ソフト。まだ未完成な部分もある。</p>
         <a href="https://sites.google.com/site/joaomorgado23/Home">JBLADE</a>
         <h3>PROP_DESIGN</h3>
-        <p>PROP_DESING is a aircraft propeller design software.</p>
+        <p>プロペラの設計解析ソフト。使い方がめんどくさい。</p>
         <a href="http://web.mit.edu/drela/Public/web/xrotor/">XROTOR</a>
         <h3>ESOTEC DEVELOPMENTS software</h3>
-        <p>They improve DFDC and XROTOR.</p>
+        <p>DFDCやXROTORを改良して配布している。</p>
         <a href="http://www.esotec.org/sw/swhome.html">Software</a>
         
 
@@ -180,7 +176,7 @@
      	<p>
         Copyright (c) 2013 Inagawa Takahiro Inaprop is Licensed under MIT License.</p>
         <p>
-     	You may copy, modify and redistribute Inaprop or its modifications freely. The code has been developped exclusively for design propeller in low Reinolds number region. All other usages are strongly disapproved. Inaprop is released free, without any guarantee of any kind. Design of all products with the use of the code will be at the user's entire risk Inaprop is by no means a professional product, and does not offer the same gurantees of robustness, reliability, precision or product support than commercial softwares.</p>
+     	You may copy, modify and redistribute Inaprop or its modifications freely. The code has been developped exclusively for design propeller in low reinolds number region. All other usages are strongly disapproved. Inaprop is released free, without any guarantee of any kind. Design of all products with the use of the code will be at the user's entire risk Inaprop is by no means a professional product, and does not offer the same gurantees of robustness, reliability, precision or product support than commercial softwares.</p>
 	    
     </div><!-- /.container -->
     
@@ -198,6 +194,5 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
-
   </body>
 </html>
