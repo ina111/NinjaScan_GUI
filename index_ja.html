@@ -40,7 +40,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">Inaprop</a>
+          <a class="navbar-brand" href="#">NinjaScan</a>
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
@@ -63,7 +63,7 @@
       <!-- Main jumbotron for a primary marketing message or call to action -->
       <div class="jumbotron">
         <h1>すごいロガー</h1>
-        <p>すごいロガーはとても小さなGPS・気圧計付き慣性計測装置です。 </p>
+        <p>驚く小ささ、優れたコストパフォーマンス「GPS・気圧計付き慣性計測装置」</p>
         <p></p>
       </div>
     </div><!-- /.container -->
@@ -71,11 +71,11 @@
     <div class="container">
         <div class="social_btn">
         <div class="twitter">
-          <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://inaprop.ina111.org/">Tweet</a>
+          <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://ina111.github.io/NinjaScan_GUI/">Tweet</a>
           <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
         </div>
         <div class="facebook">
-          <div class="fb-like" data-href="http://inaprop.ina111.org/" data-layout="button_count" data-action="like" data-show-faces="true" data-share="false"></div>
+          <div class="fb-like" data-href="http://ina111.github.io/NinjaScan_GUI/" data-layout="button_count" data-action="like" data-show-faces="true" data-share="false"></div>
         </div>
       </div>
 
@@ -84,99 +84,164 @@
         	<h2>すごいロガーについて</h2>
      	</div>
      	<p>
-     	fenrirさんが開発を主導しているオープンソースハードウェア（Creative Commons+New BSD）を商品化したものです。 3軸の加速度センサ、3軸のジャイロセンサ、3軸の地磁気センサ、気圧計、GPS受信機、温度センサを搭載しています。</p>
+     	fenrirさんが開発を主導しているオープンソースハードウェア（Creative Commons+New BSD）である"すごいロガー”（英語名：NinjaScan）です。3軸の加速度センサ、3軸のジャイロセンサ、3軸の地磁気センサ、気圧計、GPS受信機、温度センサを搭載しています。</p>
      	<p>
      	センサ計測データはMicroSDカードへの書き込みとUSB接続でリアルタイム計測が可能です。 付属のPCソフトを使えばExcelで読み取れる形式（csv形式）に変換することも可能です。</p>
-     	<ul>
-     		<li>誘導損失最小のプロペラの設計(Larrabee, Adkins & Liebeck method)</li>
-     		<li>抗力最小のプロペラの設計(vortex methos)</li>
-     		<li>プロペラ性能解析（未実装）</li>
-   		</ul>
-        <div Align="center">
-            <img src="pic/inaprop.png" width="500">
+      
+      <div class="page-header" id="series">
+          <h2>すごいロガーシリーズ</h2>
+      </div>
+      <div class="row">
+        <div class="col-sm-6 col-md-4">
+          <div class="thumbnail">
+            <img src="pic/NinjaScan-Light.JPG">
+            <div class="caption">
+              <h3>ちょっとすごいロガー</h3>
+              <p>10軸DOFの慣性計測とGPSによる位置計測が可能なロガー。外部出力端子も付いているためにテレメトリ化なども可能な標準タイプ。</p>
+            </div>
+          </div>
         </div>
+        <div class="col-sm-6 col-md-4">
+          <div class="thumbnail">
+            <img src="pic/NinjaScan-Slim.JPG">
+            <div class="caption">
+              <h3>もうちょっとすごいロガー</h3>
+              <p>世界で一番小さな10軸DOFの慣性計測とGPSによる位置計測が可能なロガー。小さくするためにログ機能に特化した超小型タイプ。</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-4">
+          <div class="thumbnail">
+            <img src="pic/NinjaScan-Slim2.png">
+            <div class="caption">
+              <h3>あらちょっとすごいロガー</h3>
+              <p>水中でも使用可能な10軸DOFの慣性計測とGPSによる位置計測が可能なロガー。使用用途によって樹脂封止などカスタマイズが行われている。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6 col-md-4">
+          <div class="thumbnail">
+            <img src="pic/NinjaScan.png">
+            <div class="caption">
+              <h3>すごいロガー</h3>
+              <p>10軸DOFの慣性計測とGPSによる位置計測に加えて、GPS/INSのカルマンフィルタによる位置姿勢の高精度測定が可能な高性能アルゴリズムを内部に搭載したタイプ。</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-4">
+          <div class="thumbnail">
+            <img src="pic/NinjaScanLogo.png">
+            <div class="caption">
+              <h3>NinjaScan GUI</h3>
+              <p>すごいロガーシリーズのログをMicroSoft Excelなどに読み込める形に変換したり、リアルタイムに計測値を読み込める専用ソフト。</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-4">
+          <div class="thumbnail">
+            <img src="pic/Viewer.png">
+            <div class="caption">
+              <h3>NinjaScan Logviewer</h3>
+              <p>計測したデータをアカデミックな用途にも堪えられる高品質なグラフ出力が出来るソフトウェア。生データをその場で見たい用途に。</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <div class="page-header" id="Purchase Online">
+          <h2>購入</h2>
+      </div>
+      <p>こちらから購入出来ます。</p>
+      <div class="row-fluid">
+        <div class="col-md-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">ちょっとすごいロガー（NinjaScan-Light）</h4>
+        </div>
+        <div class="panel-body">
+          <p><a type="button" class="btn btn-lg btn-default" href="http://www.switch-science.com/catalog/1899/">SwitchScience</a>
+          <a type="button" class="btn btn-lg btn-default" href="http://ina111.saleshop.jp/items/440739">　　　BASE　　　</a></p>
+        </div>
+      </div>
+      </div>
+      <div class="col-md-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">もうちょっとすごいロガー（NinjaScan-Slim）</h4>
+        </div>
+        <div class="panel-body">
+          <p><a type="button" class="btn btn-lg btn-default" href="http://ina111.saleshop.jp/items/719219">　　　BASE　　　</a></p>
+        </div>
+      </div>
+      </div>
+    </div>
 
     	<div class="page-header" id="download">
-        	<h2>Download</h2>
+        	<h2>Downloads</h2>
      	</div>
-     	<p>最新のバージョンは以下からダウンロード出来ます。</p>
-        <p>現在のバージョンは0.55</p>
-     	<p><a type="button" class="btn btn-lg btn-default" href="https://github.com/ina111/Inaprop">Github Page</a>
-    	<a type="button" class="btn btn-lg btn-primary" href="Inaprop.zip">Download</a></p>
-    	<h3>必要なもの</h3>
-        <p>OS: Windows vista/7/8.1</p>
-    	<p><a href="http://www.microsoft.com/ja-jp/download/details.aspx?id=17851">Microsoft .NET Framework 4</a></p>
+     	<p>User Manual.pdf</p>
+      <p>GUI Software + miscellaneous files</p>
+     	<p>Google Code</p>
+      <p>Github</p>
+      <p>Github</p>
+      <p>Firmware</p>
 
 		<div class="page-header">
-        	<h2>参照</h2>
+        	<h2>特徴</h2>
      	</div>
-        <h3>渦法 Vortex method</h3>
-     	<ul>
-            <li>Harada,"Design of propeller in low Reynolds number range",JAXA-RR-06-032, 1-13, 2007-03
-            <a href="http://repository.tksc.jaxa.jp/pl/dr/AA0063471000/en">JAXA Repository</a></li>
-            <li>Chattot,"Optimization of propellers using helicoidal vortex model",Computational Fluid Dynamics Journal,2000
-            <a href="http://mae.ucdavis.edu/chattot/publications/jjcoptiprop.pdf">PDF</a></li>
-        </ul>
-        <h3>Larrabee method</h3>
+      <div class="row-fluid">
+        <div class="col-sm-6 col-md-4">
+          <h4>オンボードセンサ</h4>
+       	<ul>
+              <li>3軸加速度センサ</li>
+              <li>3軸ジャイロセンサ</li>
+              <li>3軸地磁気センサ</li>
+              <li>気圧センサ</li>
+              <li>GPS受信機</li>
+          </ul>
+          <h4>接続先</h4>
         <ul>
-            <li>Larrabee, E. E., Practical design of minimum induced loss propellers, SAE Technical Paper 790585, 1979
-            <a href="http://ja.scribd.com/doc/82049292/Minimum-Induced-Loss-Propeller-E-Larrabee">Scribd.</a></li>
-            <li>Design of Propellers for Motorsoarers
-            <a href="http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19790015732_1979015732.pdf">PDF</a></li>
-        </ul>
-        <h3>Adkins &amp; Liebeck method</h3>
-        <ul>
-            <li>Adkins, C. N., Liebeck, R. H., Design of optimum propellers, Journal of Propulsion and Power, vol. 10 (1994), no. 5, pp 676–682.</li>
-            <li>TAKASAWA et al,"Wind Tunnel Test of a Propeller Working in a Low Reynolds Number Range"NAL TR-1071, 1990-06, pp.29-
-            <a href="http://airex.tksc.jaxa.jp/pl/dr/NALTR1071000/en">JAXA Repository</a></li>
-        </ul>
-        <h3>etc...</h3>
-        <ul>
-            <li>Betz, A. with Appendix by L. Prandtl, Schraubenpropeller mit Geringstem Energieverlust, Göttinger Nachrichten, Göttingen, 1919, pp 193–217.</li>
-            <li>Goldstein, S., On the vortex theory of screw propellers, Proc R Soc London A, 1929, 123, pp. 440–465.</li>
-            <li>Wald, Q. R., The aerodynamics of propellers, Progress in Aerospace Sciences 42 (2006), pp 85–128,
-                <a href="http://www.sciencedirect.com/science/article/pii/S0376042106000455">ScienceDirect</a></li>
-            <li>Klesa, "Comparison of Methods for Computtion of Ideal Circulation Distribution on the Propeller"
-                <a href="http://stc.fs.cvut.cz/History/2010/Sbornik/papers/pdf/KlesaJan-306748.pdf">PDF</a></li>
-            <li>my blog(Japanese)
-                <a href="http://www.ina111.org">http://www.ina111.org</a></li>
-
-        </ul>
-
-        <div class="page-header">
-            <h2>代わりとなるもの</h2>
+              <li>USB</li>
+              <li>Micro SDカード</li>
+              <li>GPSアンテナ(U.FLコネクタ)</li>
+          </ul>          
         </div>
-        <p>以下のものはInapropの代わりとして使えるオススメのソフトウェアです。
-        </p>
-        <h3>XROTOR</h3>
-        <p>ダクト付きや自由端のプロペラ、風車の設計解析のための対話的プログラム。推奨。</p>
-        <a href="http://web.mit.edu/drela/Public/web/xrotor/">XROTOR</a>
-        <h3>DCDF</h3>
-        <p>ダクト付きファンの設計解析の対話的プログラム。</p>
-        <a href="http://web.mit.edu/drela/Public/web/dfdc/">DCDF</a>
-        <p></p>
-        <h3>QPROP/QMIL</h3>
-        <p>モーターとプロペラ、風車と発電機の組み合わせの性能予測プログラム。QMILによってプロペラの設計も可能。</p>
-        <a href="http://web.mit.edu/drela/Public/web/qprop/">QPROP/QMIL</a>
-        <h3>JBLADE</h3>
-        <p>XFLR5とQBLADEを元にしたプロペラの設計解析ソフト。まだ未完成な部分もある。</p>
-        <a href="https://sites.google.com/site/joaomorgado23/Home">JBLADE</a>
-        <h3>PROP_DESIGN</h3>
-        <p>プロペラの設計解析ソフト。使い方がめんどくさい。</p>
-        <a href="http://web.mit.edu/drela/Public/web/xrotor/">XROTOR</a>
-        <h3>ESOTEC DEVELOPMENTS software</h3>
-        <p>DFDCやXROTORを改良して配布している。</p>
-        <a href="http://www.esotec.org/sw/swhome.html">Software</a>
-        
+        <div class="col-sm-6 col-md-4">
+          <h4>外形</h4>
+        <ul>
+              <li>基板大きさ: 26 x 36mm</li>
+              <li>全体大きさ: 37 x 36mm</li>
+              <li>基板重さ: 3g</li>
+              <li>全体重さ: 19g(電池含まず）</li>
+          </ul>
+          <h4>外部接続</h4>
+        <ul>
+              <li>Digital I/O</li>
+              <li>UART bus</li>
+              <li>I2C bus</li>
+              <li>SPI bus</li>
+          </ul>
+        </div>
+        <div class="col-sm-6 col-md-4">
+          <h4>電源</h4>
+        <ul>
+              <li>LiPo 1セル(1S 3.7V)</li>
+              <li>USB給電</li>
+              <li>外部給電</li>
+          </ul>
+          <h4>ソフトウェア</h4>
+        <ul>
+              <li>データ変換(binary→ASCII）</li>
+              <li>リアルテタイムログをPCに保存</li>
+              <li>リアルタイムデータグラフ化</li>
+              <li>ログデータの学術用途に堪える品質でのグラフ化</li>
+          </ul>
+        </div>
+     </div>
 
-     	<div class="page-header">
-        	<h2>License, Desclaimer</h2>
-     	</div>
-     	<p>
-        Copyright (c) 2013 Inagawa Takahiro Inaprop is Licensed under MIT License.</p>
-        <p>
-     	You may copy, modify and redistribute Inaprop or its modifications freely. The code has been developped exclusively for design propeller in low reinolds number region. All other usages are strongly disapproved. Inaprop is released free, without any guarantee of any kind. Design of all products with the use of the code will be at the user's entire risk Inaprop is by no means a professional product, and does not offer the same gurantees of robustness, reliability, precision or product support than commercial softwares.</p>
+
 	    
     </div><!-- /.container -->
     
