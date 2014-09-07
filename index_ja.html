@@ -76,8 +76,9 @@
           <div class="fb-like" data-href="http://ina111.github.io/NinjaScan_GUI/" data-layout="button_count" data-action="like" data-show-faces="true" data-share="false"></div>
         </div>
       </div>
+    </div>
 
-
+    <div class="container">
     	<div class="page-header" id="about">
         	<h2>すごいロガーについて</h2>
      	</div>
@@ -183,20 +184,27 @@
       <div class="col-sm-6 col-md-4">
         <h4>オンボードセンサ</h4>
       <ul>
-            <li>3軸加速度センサ</li>
-            <li>3軸ジャイロセンサ</li>
-            <li>3軸地磁気センサ</li>
-            <li>気圧センサ</li>
-            <li>GPS受信機</li>
+            <li><a href="http://invensense.com/jp/mems/gyro/mpu6000.html">3軸加速度センサ</a>(±8G、上限±16G)</li>
+            <li><a href="http://invensense.com/jp/mems/gyro/mpu6000.html">3軸ジャイロセンサ</a>(±2000dps、上限±2000dps)</li>
+            <li><a href="http://www.freescale.com/ja/webapp/sps/site/prod_summary.jsp?code=MAG3110">3軸地磁気センサ</a>(±1000uT)</li>
+            <li><a href="http://www.meas-spec.com/product/t_product.aspx?id=8503">気圧センサ</a>(10hPa~1200hPa)</li>
+            <li><a href="http://www.u-blox.com/en/gps-modules/pvt-modules/previous-generations/neo-6-family.html">GPS受信機</a></li>
         </ul>
-        <h4>接続先</h4>
+        <h4>サンプリングレート</h4>
+      <ul>
+            <li>加速度ジャイロ: 10ms</li>
+            <li>地磁気 : 640ms</li>
+            <li>気圧: 320ms</li>
+            <li>GPS: 200ms</li>
+        </ul> 
+      </div>
+      <div class="col-sm-6 col-md-4">
+        <h4>接続</h4>
       <ul>
             <li>USB</li>
             <li>Micro SDカード</li>
             <li>GPSアンテナ(U.FLコネクタ)</li>
         </ul>          
-      </div>
-      <div class="col-sm-6 col-md-4">
         <h4>外形</h4>
       <ul>
             <li>基板大きさ: 26 x 36mm</li>
@@ -216,17 +224,20 @@
             <li>LiPo 1セル(1S 3.7V)</li>
             <li>USB給電</li>
             <li>外部給電</li>
+            <li>LiPoとUSB給電を同時に行うとLiPoに充電</li>
         </ul>
         <h4>ソフトウェア</h4>
       <ul>
             <li>データ変換(binary→ASCII）</li>
-            <li>リアルテタイムログをPCに保存</li>
+            <li>リアルタイムデータをPCに保存</li>
             <li>リアルタイムデータグラフ化</li>
             <li>ログデータの学術用途に堪える品質でのグラフ化</li>
         </ul>
       </div>
      </div>
+   </div>
 
+    <div class="container">
       <div class="page-header" id="connect">
           <h2><span class="glyphicon glyphicon-share-alt"></span> 接続</h2>
       </div>
@@ -260,6 +271,12 @@
         </div>
       </div>
       
+      <div class="page-header" id="univ">
+        <h2><span class="glyphicon glyphicon-thumbs-up"></span> 納入実績</h2>
+      </div>
+      <p>2014年5月から販売開始し、個人様からのご注文が多いですが、大学・企業からでは、下記法人様などからご購入頂いています。公費での購入の際は個別にご連絡頂ければ対応致します。</p>
+      <p>・秋田大学　・科学技術振興機構　・北海道大学　・広島工業大学　・日本大学　・山梨大学　・神奈川大学　・大手重工や電機メーカーなど</p>
+
     	<div class="page-header" id="download">
         	<h2><span class="glyphicon glyphicon-download-alt"></span> Downloads</h2>
      	</div>
@@ -270,7 +287,7 @@
       <p><img src="pic/github-icon.png"><a href="https://github.com/ina111/NinjaScan_GUI"> ina111/NinjaScan_GUI | Github</a></p>
       <p><img src="pic/hex-icon.png"><a href="doc/NinjaScanLight.hex"> 出荷時に書き込んでいるファームウェア</a></p>
 
-      
+
     </div><!-- /.container -->
     
     
