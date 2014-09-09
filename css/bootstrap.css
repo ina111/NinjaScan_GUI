@@ -4367,7 +4367,7 @@ a.list-group-item.active > .badge,
 .jumbotron {
   padding: 30px;
   margin-bottom: 30px;
-  color: inherit;
+  color: white;
   background-color: #eee;
   background: url("pic/sky.jpg");
 }
