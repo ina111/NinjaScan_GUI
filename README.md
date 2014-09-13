@@ -1,7 +1,7 @@
-NinjaScan_GUI
+NinjaScan GUI
 =============
 
-Ninja Scan GUI software including Sylphide format parser, 
+Ninja Scan GUI software including Sylphide format parser.
 
 version
 ----
