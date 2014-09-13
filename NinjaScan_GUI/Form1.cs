@@ -27,7 +27,8 @@ namespace NinjaScan_GUI
         StreamWriter csv_A = new StreamWriter(Stream.Null);
         StreamWriter csv_P = new StreamWriter(Stream.Null);
         StreamWriter csv_M = new StreamWriter(Stream.Null);
-        FileStream csv_G = new FileStream("garbage.bin", FileMode.Append, FileAccess.Write);
+        StreamWriter csv_G = new StreamWriter(Stream.Null);
+        FileStream ubx_G = new FileStream("garbage.bin", FileMode.Append, FileAccess.Write);
 
         public static AHRS.MadgwickAHRS AHRS = new AHRS.MadgwickAHRS(1f / 100f, 0.1f);
 
@@ -223,7 +224,7 @@ namespace NinjaScan_GUI
                         // USBdumpボタンがONならファイル書き込みを行う。
                         if (buttonUSBStop.Enabled == true)
                         {
-                            writeFrombinTocsv(head, csv_A, csv_M, csv_P, csv_G);
+                            writeFrombinTocsv(head, csv_A, csv_M, csv_P, csv_G, ubx_G);
                         }
                     }
 
@@ -237,10 +238,11 @@ namespace NinjaScan_GUI
                 csv_M.Close();
                 csv_P.Close();
                 csv_G.Close();
+                ubx_G.Close();
             }
         }
 
-        private void writeFrombinTocsv(byte head, StreamWriter asw, StreamWriter msw, StreamWriter psw, FileStream gfs)
+        private void writeFrombinTocsv(byte head, StreamWriter asw, StreamWriter msw, StreamWriter psw, StreamWriter gsw, FileStream gfs)
         {
             try
             {
@@ -263,6 +265,11 @@ namespace NinjaScan_GUI
                 else if (head == G_Page.header)
                 {
                     gfs.Write(G_Page.ubx, 0, G_Page.ubx.Length);
+                    if (G_Page.isOutput == true)
+                    {
+                        gsw.WriteLine(UBX.NMEA_GPGGA);
+                        gsw.WriteLine(UBX.NMEA_GPZDA);
+                    }
                 }
             }
             catch (Exception e)
@@ -348,11 +355,12 @@ namespace NinjaScan_GUI
             string A_file = output_folder + "\\" + file_name + "_A.csv";
             string P_file = output_folder + "\\" + file_name + "_P.csv";
             string M_file = output_folder + "\\" + file_name + "_M.csv";
-            string G_file = output_folder + "\\" + file_name + ".ubx";
+            string G_file = output_folder + "\\" + file_name + "_G.nmea";
+            string UBX_file = output_folder + "\\" + file_name + ".ubx";
 
             // ファイルが既に存在していたら警告を出す。キャンセルボタンを押すとメソッドを抜ける
             if (File.Exists(A_file) || File.Exists(P_file) ||
-                File.Exists(M_file) || File.Exists(G_file))
+                File.Exists(M_file) || File.Exists(G_file) || File.Exists(UBX_file))
             {
                 result_overwrite = MessageBox.Show("Are you sure you want to overwrite the files?",
                     "Overwrite save",
@@ -371,7 +379,8 @@ namespace NinjaScan_GUI
             StreamWriter csv_A = new StreamWriter(A_file, false);
             StreamWriter csv_P = new StreamWriter(P_file, false);
             StreamWriter csv_M = new StreamWriter(M_file, false);
-            BinaryWriter ubx_G = new BinaryWriter(File.OpenWrite(G_file));
+            StreamWriter csv_G = new StreamWriter(G_file, false);
+            BinaryWriter ubx_G = new BinaryWriter(File.OpenWrite(UBX_file));
 
             csv_A.WriteLine("#gpstime,acc_xa(g),acc_y(g),acc_z(g),gyro_x(dps),gyro_y(dps),gyro_z(dps)");
             csv_M.WriteLine("#gpstime,mag_x(uT),mag_y(uT),mag_z(uT)");
@@ -417,6 +426,15 @@ namespace NinjaScan_GUI
                         {
                             G_Page.Read(br);
                             ubx_G.Write(G_Page.ubx); // GPS pageだけubx形式
+                            G_Page.SeekHead(G_Page.analysisObject);
+                            if (G_Page.isOutput == true)
+                            {
+                                csv_G.WriteLine(UBX.NMEA_GPGGA);
+                                if (UBX.time.Second == 0 && UBX.time.Millisecond == 0)
+                                {
+                                    csv_G.WriteLine(UBX.NMEA_GPZDA);
+                                }
+                            }
                         }
                     } while (true);
                 }
@@ -427,6 +445,7 @@ namespace NinjaScan_GUI
                     csv_A.Close();
                     csv_P.Close();
                     csv_M.Close();
+                    csv_G.Close();
                     ubx_G.Close();
                 }
             }
@@ -444,11 +463,12 @@ namespace NinjaScan_GUI
             string A_file = output_folder + "\\" + file_name + "_A.csv";
             string P_file = output_folder + "\\" + file_name + "_P.csv";
             string M_file = output_folder + "\\" + file_name + "_M.csv";
-            string G_file = output_folder + "\\" + file_name + ".ubx";
+            string G_file = output_folder + "\\" + file_name + "_G.nmea";
+            string UBX_file = output_folder + "\\" + file_name + ".ubx";
 
             // ファイルが既に存在していたら警告を出す
             if (File.Exists(A_file) || File.Exists(P_file) ||
-                File.Exists(M_file) || File.Exists(G_file))
+                File.Exists(M_file) || File.Exists(G_file) || File.Exists(UBX_file))
             {
                 result_overwrite = MessageBox.Show("Are you sure you want to overwrite the files?",
                     "Overwrite save",
@@ -487,7 +507,8 @@ namespace NinjaScan_GUI
                 csv_A = new StreamWriter(A_file, true);
                 csv_M = new StreamWriter(M_file, true);
                 csv_P = new StreamWriter(P_file, true);
-                csv_G = new FileStream(G_file, FileMode.Append, FileAccess.Write);
+                csv_G = new StreamWriter(G_file, true);
+                ubx_G = new FileStream(UBX_file, FileMode.Append, FileAccess.Write);
             }
         }
 
@@ -502,6 +523,7 @@ namespace NinjaScan_GUI
             csv_M.Close();
             csv_P.Close();
             csv_G.Close();
+            ubx_G.Close();
         }
 
 

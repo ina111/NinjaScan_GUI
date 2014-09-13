@@ -335,6 +335,7 @@ namespace NinjaScan
         public static int object_offset = 0; // コピー先のオフセット
         public static Boolean isAnalysisPayload = false; // ヘッドシークかペイロード解析か
         public static Boolean isEnoughPayload = false; // チェックサムまでペイロードがbuffに揃っているか
+        public static Boolean isOutput = false;
 
         public static byte[] ubxheader = { 0xB5, 0x62 };
         public static byte[] id_NAV_POSLLH = { 0x01, 0x02 };
@@ -362,6 +363,8 @@ namespace NinjaScan
             {
                 if (isAnalysisPayload == false)
                 {
+                    // NAV-VELNED以外の時は出力しない。
+                    isOutput = false;
                     // ヘッドシーク
                     int index_header0 = Array.IndexOf(input, ubxheader[0]);
                     int index_header1 = Array.IndexOf(input, ubxheader[1]);
@@ -397,6 +400,8 @@ namespace NinjaScan
 
                         if (index_header0 + UBX.length_payload + 8 < object_offset + 31)
                         {
+                            // 十分なペイロードを持っている時
+                            isEnoughPayload = true;
                             // IDによる場合分け
                             if (id_header.SequenceEqual(UBX.id_NAV_POSLLH))
                             {
@@ -409,11 +414,21 @@ namespace NinjaScan
                             }
                             else if (id_header.SequenceEqual(UBX.id_NAV_SOL))
                             {
-
+                                UBX.Analysis_NAV_SOL(input, index_header0);
+                            }
+                            else if (id_header.SequenceEqual(UBX.id_NAV_VELNED))
+                            {
+                                UBX.Analysis_NAV_VELNED(input, index_header0);
+                                UBX.makeNMEA();
+                                isOutput = true;
                             }
                             else if (id_header.SequenceEqual(UBX.id_NAV_TIMEUTC))
                             {
                                 UBX.Analysis_NAV_TIMEUTC(input, index_header0);
+                            }
+                            else if (id_header.SequenceEqual(UBX.id_NAV_SVINFO))
+                            {
+                                UBX.Analysis_NAV_SVINFO(input, index_header0);
                             }
 
                             byte[] analysisObject_buff = new byte[1000];
@@ -427,7 +442,7 @@ namespace NinjaScan
                         }
                         else
                         {
-                            Console.WriteLine("Payload length: " + (UBX.length_payload));
+                            //Console.WriteLine("Payload length: " + (UBX.length_payload));
                             object_offset += 31; // offsetは32byteからG_head分を除いた31byteを足していく
                             return;
 
@@ -505,10 +520,22 @@ namespace NinjaScan
         public static Int32 ecefX;
         public static Int32 ecefY;
         public static Int32 ecefZ;
+        public static UInt32 pAcc; 
         public static Int32 ecefVX;
         public static Int32 ecefVY;
         public static Int32 ecefVZ;
-        public static UInt32 numSV;
+        public static UInt32 sAcc;
+        public static UInt16 pDOP; 
+        public static byte numSV;
+
+        // NAV_VELNED
+        public static Int32 velN; // cm/s
+        public static Int32 velE;
+        public static Int32 velD;
+        public static UInt32 speed; // 3-D speed cm/s
+        public static UInt32 gSpeed; // ground speed cm/s
+        public static Int32 heaading; // Heading of motion 2-D 1e-5 deg
+        public static UInt32 cAcc;
 
         // gpsFix
         private static byte[] gpsFix_NoFix = new byte[1] { 0x00 };
@@ -538,6 +565,27 @@ namespace NinjaScan
         public static UInt32 tow_hour;
         public static UInt32 tow_min;
         public static double tow_sec;
+
+        // NMEA
+        public static Double NMEA_UTC;
+        public static Double NMEA_lat;
+        public static Double NMEA_lon;
+        public static Double NMEA_fixquality;
+        public static Double NMEA_numSV;
+        public static Double NMEA_hDOP;
+        public static Double NMEA_alt;
+        public static Double NMEA_height_geoid;
+        public static string NMEA_checksum;
+        public static Double NMEA_day;
+        public static Double NMEA_month;
+        public static Double NMEA_year;
+        public static Double NMEA_hour;
+        public static Double NMEA_min;
+        public static string NMEA_GPGGA;
+        public static string NMEA_GPZDA;
+
+        // 時刻
+        public static DateTime time;
 
         public static void Read_NAV_POSECEF(BinaryReader input)
         {
@@ -572,6 +620,95 @@ namespace NinjaScan
             vAcc = BitConverter.ToUInt32(bytevAcc, 0);
 
             TOW2Time(itow);
+        }
+
+        public static void Analysis_NAV_VELNED(byte[] input, int index_header0)
+        {
+            byte[] byteitow = new byte[4];
+            byte[] bytevelN = new byte[4];
+            byte[] bytevelE = new byte[4];
+            byte[] bytevelD = new byte[4];
+            byte[] bytespeed = new byte[4];
+            byte[] bytegSpeed = new byte[4];
+            byte[] byteheading = new byte[4];
+            byte[] bytesAcc = new byte[4];
+            byte[] bytecAcc = new byte[4];
+
+            Array.Copy(input, index_header0 + 6, byteitow, 0, 4);
+            Array.Copy(input, index_header0 + 10, bytevelN, 0, 4);
+            Array.Copy(input, index_header0 + 14, bytevelE, 0, 4);
+            Array.Copy(input, index_header0 + 18, bytevelD, 0, 4);
+            Array.Copy(input, index_header0 + 22, bytespeed, 0, 4);
+            Array.Copy(input, index_header0 + 26, bytegSpeed, 0, 4);
+            Array.Copy(input, index_header0 + 30, byteheading, 0, 4);
+            Array.Copy(input, index_header0 + 34, bytesAcc, 0, 4);
+            Array.Copy(input, index_header0 + 38, bytecAcc, 0, 4);
+
+            itow = BitConverter.ToUInt32(byteitow, 0);
+            velN = BitConverter.ToInt32(bytevelN, 0);
+            velE = BitConverter.ToInt32(bytevelE, 0);
+            velD = BitConverter.ToInt32(bytevelD, 0);
+            speed = BitConverter.ToUInt32(bytespeed, 0);
+            gSpeed = BitConverter.ToUInt32(bytegSpeed, 0);
+            heaading = BitConverter.ToInt32(byteheading, 0);
+            sAcc = BitConverter.ToUInt32(bytesAcc, 0);
+            cAcc = BitConverter.ToUInt32(bytecAcc, 0);
+
+            TOW2Time(itow);
+        }
+
+        public static void Analysis_NAV_SOL(byte[] input, int index_header0)
+        {
+            byte[] byteitow = new byte[4];
+            byte[] byteftow = new byte[4];
+            byte[] byteweek = new byte[2];
+            byte[] bytegpsFix = new byte[1];
+            byte[] byteflags = new byte[1];
+            byte[] byteecefX = new byte[4];
+            byte[] byteecefY = new byte[4];
+            byte[] byteecefZ = new byte[4];
+            byte[] bytepAcc = new byte[4];
+            byte[] byteecefVX = new byte[4];
+            byte[] byteecefVY = new byte[4];
+            byte[] byteecefVZ = new byte[4];
+            byte[] bytesAcc = new byte[4];
+            byte[] bytepDOP = new byte[2];
+            byte[] bytenumSV = new byte[1];
+
+            Array.Copy(input, index_header0 + 6, byteitow, 0, 4);
+            Array.Copy(input, index_header0 + 10, byteftow, 0, 4);
+            Array.Copy(input, index_header0 + 14, byteweek, 0, 2);
+            Array.Copy(input, index_header0 + 16, bytegpsFix, 0, 1);
+            Array.Copy(input, index_header0 + 17, byteflags, 0, 1);
+            Array.Copy(input, index_header0 + 18, byteecefX, 0, 4);
+            Array.Copy(input, index_header0 + 22, byteecefY, 0, 4);
+            Array.Copy(input, index_header0 + 26, byteecefZ, 0, 4);
+            Array.Copy(input, index_header0 + 30, bytepAcc, 0, 4);
+            Array.Copy(input, index_header0 + 34, byteecefVX, 0, 4);
+            Array.Copy(input, index_header0 + 38, byteecefVY, 0, 4);
+            Array.Copy(input, index_header0 + 42, byteecefVZ, 0, 4);
+            Array.Copy(input, index_header0 + 46, bytesAcc, 0, 4);
+            Array.Copy(input, index_header0 + 50, bytepDOP, 0, 2);
+            Array.Copy(input, index_header0 + 53, bytenumSV, 0, 1);
+
+            itow = BitConverter.ToUInt32(byteitow, 0);
+            ftow = BitConverter.ToInt32(byteftow, 0); 
+            week = BitConverter.ToInt16(byteweek, 0);
+            //gpsFix;
+            //flags;
+            ecefX = BitConverter.ToInt32(byteecefX, 0);
+            ecefX = BitConverter.ToInt32(byteecefY, 0);
+            ecefX = BitConverter.ToInt32(byteecefZ, 0);
+            pAcc = BitConverter.ToUInt32(bytepAcc, 0);
+            ecefVX = BitConverter.ToInt32(byteecefVX, 0);
+            ecefVX = BitConverter.ToInt32(byteecefVY, 0);
+            ecefVX = BitConverter.ToInt32(byteecefVZ, 0);
+            sAcc = BitConverter.ToUInt32(bytesAcc, 0);
+            pDOP = BitConverter.ToUInt16(bytepDOP, 0);
+            numSV = bytenumSV[0];
+
+            TOW2Time(itow);
+            makeNMEA();
         }
 
         public static void Analysis_NAV_STATUS(byte[] input, int index_header0)
@@ -613,6 +750,10 @@ namespace NinjaScan
             TOW2Time(itow);
         }
 
+        public static void Analysis_NAV_SVINFO(byte[] input, int index_header0)
+        {
+
+        }
         public static void Analysis_NAV_TIMEUTC(byte[] input, int index_header0)
         {
             byte[] byteitow = new byte[4];
@@ -656,5 +797,117 @@ namespace NinjaScan
             tow_sec = remainder_tow_min * 60;
         }
 
+        public static void makeNMEA()
+        {
+            time = GetFromGps(week, itow);
+            NMEA_UTC = time.Hour * 10000 + time.Minute * 100 + time.Second + time.Millisecond / 1000.0;
+            NMEA_lat = deg2gpsformat(lat / Math.Pow(10, 7));
+            NMEA_lon = deg2gpsformat(lon / Math.Pow(10, 7));
+            if (gpsFix == gpsFix_NoFix.ToString() || gpsFix == gpsFix_TimeOnlyFix.ToString())
+            {
+                NMEA_fixquality = 0;
+            }
+            else
+            {
+                NMEA_fixquality = 1;
+            }
+            NMEA_numSV = numSV;
+            NMEA_hDOP = pDOP / 100.0;
+            NMEA_alt = hMSL / 1000.0;
+            NMEA_height_geoid = (height - hMSL) / 1000.0;
+            NMEA_GPGGA = make_GGA();
+            NMEA_day = time.Day;
+            NMEA_month = time.Month;
+            NMEA_year = time.Year;
+            NMEA_hour = time.Hour;
+            NMEA_min = time.Minute;
+            NMEA_GPZDA = make_ZDA();
+        }
+
+        private static double deg2gpsformat(double pos)
+        {
+            // 緯度経度(deg)からNMEAのセンテンス形式に変換
+            // ex.緯度48.1167***度をNEMAフォーマットの4807.03***の分刻みに変換
+            // [DD.DDDDDDDD]->[DDMM.MMMMMM](D:度,M:分)
+            int degree = (int)Math.Floor(pos);
+            float minute = (float)((pos - degree) * 60);
+            return degree * 100 + minute;
+        }
+
+        private static DateTime GetFromGps(Int16 weeknumber, UInt32 msec)
+        {
+            // gpsweekとitowから時刻生成
+            DateTime datum = new DateTime(1980, 1, 6, 0, 0, 0);
+            DateTime week = datum.AddDays(weeknumber * 7);
+            DateTime time = week.AddMilliseconds(msec);
+            return time;
+        }
+
+        private static string make_checksum(string str)
+        {
+            // NMEAセンテンスのチェックサム作成
+        	// '$GPGGA,~~~,M,,0000*'までの文字列を読み込んでチェックサム(8bitの16進数表記0x**)出力
+            // “$”、”!”、”*”を含まないセンテンス中の全ての文字 の8ビットの排他的論理和。","は含むので注意
+            // ex. $GPGGA,125044.001,3536.1985,N,13941.0743,E,2,09,1.0,12.5,M,36.1,M,,0000*6A
+            int num_str = str.Length;
+            byte checksum = 0;
+            for (int i = 0; i < num_str; i++)
+            {
+                if (str[i] != '$' && str[i] != '!' && str[i] != '*')
+                {
+                    checksum = (byte)(checksum ^ (byte)str[i]);
+                }
+            }
+            return checksum.ToString("X2");
+        }
+
+        private static string make_GGA()
+        {
+            // GPGGAセンテンス生成
+            string GGA;
+            if (numSV == 0)
+            {
+                return "$GPGGA,,N,,E,0,00,,,M,,M,,*41";
+            }
+            GGA = string.Format("$GPGGA,{0:000000.00},{1:0000.000000},", NMEA_UTC, NMEA_lat);
+            if (NMEA_lat > 0)
+            { 
+                GGA = GGA + string.Format("N,");
+            }
+            else
+            { 
+                GGA = GGA + string.Format("S,");
+            }
+            GGA = GGA + string.Format("{0:00000.000000},", NMEA_lon);
+            if (NMEA_lon > 0)
+            {
+                GGA = GGA + string.Format("E,");
+            }
+            else
+            {
+                GGA = GGA + string.Format("W,");
+            }
+            GGA = GGA + string.Format("{0:0},{1:00},{2:0.0},{3:N2},M,{4:N2},M,,*",
+                NMEA_fixquality, NMEA_numSV, NMEA_hDOP, NMEA_alt, NMEA_height_geoid);
+            NMEA_checksum = make_checksum(GGA);
+            GGA = GGA + NMEA_checksum;
+            return GGA;
+        }
+
+        private static string make_ZDA()
+        {
+            // GPZDAセンテンス生成
+            string ZDA;
+            if (time.Year == 1980)
+            {
+                return "$GPZDA,,,,,,*48";
+            }
+
+            ZDA = string.Format("$GPZDA,{0:000000.00},{1:00},{2:00},{3:0000},{4:00},{5:00}*",
+                NMEA_UTC, NMEA_day, NMEA_month, NMEA_year, NMEA_hour, NMEA_min);
+            NMEA_checksum = make_checksum(ZDA);
+            ZDA = ZDA + NMEA_checksum;
+            return ZDA;
+        }
     }
 }
