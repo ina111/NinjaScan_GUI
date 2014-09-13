@@ -396,7 +396,7 @@
             this.Controls.Add(this.groupBoxPlot);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "Sylphide Viewer";
+            this.Text = "NinjaScan GUI";
             this.groupBoxPlot.ResumeLayout(false);
             this.groupBoxPort.ResumeLayout(false);
             this.groupBoxPort.PerformLayout();
