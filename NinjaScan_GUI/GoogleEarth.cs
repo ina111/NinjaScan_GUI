@@ -13,6 +13,9 @@ namespace NinjaScan_GUI
 {
     public partial class GoogleEarth : Form
     {
+        // 起動からの時間
+        private int sec = 0;
+
         public GoogleEarth()
         {
             InitializeComponent();
@@ -44,9 +47,15 @@ namespace NinjaScan_GUI
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            sec++;
             labelGPSFix.Text = "STATUS: " + UBX.gpsFix;
             labelGPSLLH.Text = "latitude: " + UBX.lat + "  longitude: " + UBX.lon;
             labelTIME.Text = "UTC TIME: " + UBX.tow_hour + ":" + UBX.tow_min + ":" + (UBX.tow_sec).ToString("F1");
+            if (sec > 25 && UBX.time.Second % 10 == 0 && UBX.time.Millisecond == 0)
+            {
+                object[] args = { UBX.lat * Math.Pow(10, -7), UBX.lon * Math.Pow(10, -7), UBX.height };
+                webBrowser1.Document.InvokeScript("js_func1", args);
+            }
         }
     }
 }

@@ -31,12 +31,12 @@
             this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.labelTIME = new System.Windows.Forms.Label();
+            this.labelGPSLLH = new System.Windows.Forms.Label();
+            this.labelGPSFix = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.webBrowser1 = new System.Windows.Forms.WebBrowser();
-            this.labelGPSFix = new System.Windows.Forms.Label();
-            this.labelGPSLLH = new System.Windows.Forms.Label();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.labelTIME = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -68,6 +68,33 @@
             this.panel1.Size = new System.Drawing.Size(641, 45);
             this.panel1.TabIndex = 0;
             // 
+            // labelTIME
+            // 
+            this.labelTIME.AutoSize = true;
+            this.labelTIME.Location = new System.Drawing.Point(423, 13);
+            this.labelTIME.Name = "labelTIME";
+            this.labelTIME.Size = new System.Drawing.Size(36, 12);
+            this.labelTIME.TabIndex = 3;
+            this.labelTIME.Text = "Time: ";
+            // 
+            // labelGPSLLH
+            // 
+            this.labelGPSLLH.AutoSize = true;
+            this.labelGPSLLH.Location = new System.Drawing.Point(194, 24);
+            this.labelGPSLLH.Name = "labelGPSLLH";
+            this.labelGPSLLH.Size = new System.Drawing.Size(77, 12);
+            this.labelGPSLLH.TabIndex = 2;
+            this.labelGPSLLH.Text = "Time of Week:";
+            // 
+            // labelGPSFix
+            // 
+            this.labelGPSFix.AutoSize = true;
+            this.labelGPSFix.Location = new System.Drawing.Point(194, 8);
+            this.labelGPSFix.Name = "labelGPSFix";
+            this.labelGPSFix.Size = new System.Drawing.Size(55, 12);
+            this.labelGPSFix.TabIndex = 1;
+            this.labelGPSFix.Text = "STATUS: ";
+            // 
             // button1
             // 
             this.button1.Location = new System.Drawing.Point(28, 13);
@@ -87,37 +114,11 @@
             this.webBrowser1.Size = new System.Drawing.Size(641, 440);
             this.webBrowser1.TabIndex = 1;
             // 
-            // labelGPSFix
-            // 
-            this.labelGPSFix.AutoSize = true;
-            this.labelGPSFix.Location = new System.Drawing.Point(194, 8);
-            this.labelGPSFix.Name = "labelGPSFix";
-            this.labelGPSFix.Size = new System.Drawing.Size(55, 12);
-            this.labelGPSFix.TabIndex = 1;
-            this.labelGPSFix.Text = "STATUS: ";
-            // 
-            // labelGPSLLH
-            // 
-            this.labelGPSLLH.AutoSize = true;
-            this.labelGPSLLH.Location = new System.Drawing.Point(194, 24);
-            this.labelGPSLLH.Name = "labelGPSLLH";
-            this.labelGPSLLH.Size = new System.Drawing.Size(77, 12);
-            this.labelGPSLLH.TabIndex = 2;
-            this.labelGPSLLH.Text = "Time of Week:";
-            // 
             // timer1
             // 
             this.timer1.Enabled = true;
+            this.timer1.Interval = 200;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // labelTIME
-            // 
-            this.labelTIME.AutoSize = true;
-            this.labelTIME.Location = new System.Drawing.Point(423, 13);
-            this.labelTIME.Name = "labelTIME";
-            this.labelTIME.Size = new System.Drawing.Size(36, 12);
-            this.labelTIME.TabIndex = 3;
-            this.labelTIME.Text = "Time: ";
             // 
             // GoogleEarth
             // 

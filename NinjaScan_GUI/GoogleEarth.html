@@ -33,6 +33,23 @@
   placemark.setGeometry(point);
   ge.getFeatures().appendChild(placemark);
   }
+
+  var js_func1 = function(lat, lon, alt){
+  var placemark = ge.createPlacemark('');
+  var icon = ge.createIcon('');
+  icon.setHref('http://earth.google.com/images/kml-icons/track-directional/track-none.png');
+  var style = ge.createStyle(''); //create a new style
+  style.getIconStyle().setIcon(icon); //apply the icon to the style
+  placemark.setStyleSelector(style); //apply the style to the placemark
+  
+  var point = ge.createPoint('');
+  point.setLatitude(lat);
+  point.setLongitude(lon);
+  point.setAltitude(alt);
+  placemark.setGeometry(point);
+  var oldchild = ge.getFeatures().getLastChild();
+  ge.getFeatures().replaceChild(placemark, oldchild);
+  }
 </script>
 </head>
 <body>

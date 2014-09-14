@@ -437,7 +437,8 @@ namespace NinjaScan
 
 
                             analysisObject = new byte[1000];
-                            Array.Copy(analysisObject_buff, 31, analysisObject, 0, 31);
+                            //Array.Copy(analysisObject_buff, 31, analysisObject, 0, 31);
+                            Array.Copy(analysisObject_buff, 0, analysisObject, 0, 31);
                             return;
                         }
                         else
