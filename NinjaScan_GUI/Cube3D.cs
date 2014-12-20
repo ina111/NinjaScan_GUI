@@ -18,15 +18,71 @@ namespace NinjaScan_GUI
         Vector4 vec4 = new Vector4();
         float angle;
 
+        private void DrawCube()
+        {
+            GL.Begin(PrimitiveType.Polygon);
+            GL.Color4(Color4.Gray);
+            GL.Vertex3(0.5, -0.5, -0.5);      // P1 is red
+            GL.Vertex3(0.5, 0.5, -0.5);      // P2 is green
+            GL.Vertex3(-0.5, 0.5, -0.5);      // P3 is blue
+            GL.Vertex3(-0.5, -0.5, -0.5);      // P4 is purple
+            GL.End();
+
+            // White side - BACK
+            GL.Begin(PrimitiveType.Polygon);
+            GL.Color4(Color4.Yellow);
+            GL.Vertex3(0.5, -0.5, 0.5);
+            GL.Vertex3(0.5, 0.5, 0.5);
+            GL.Vertex3(-0.5, 0.5, 0.5);
+            GL.Vertex3(-0.5, -0.5, 0.5);
+            GL.End();
+
+            // Purple side - RIGHT
+            GL.Begin(PrimitiveType.Polygon);
+            GL.Color4(Color4.White);
+            GL.Vertex3(0.5, -0.5, -0.5);
+            GL.Vertex3(0.5, 0.5, -0.5);
+            GL.Vertex3(0.5, 0.5, 0.5);
+            GL.Vertex3(0.5, -0.5, 0.5);
+            GL.End();
+
+            // Green side - LEFT
+            GL.Begin(PrimitiveType.Polygon);
+            GL.Color4(Color4.Red);
+            GL.Vertex3(-0.5, -0.5, 0.5);
+            GL.Vertex3(-0.5, 0.5, 0.5);
+            GL.Vertex3(-0.5, 0.5, -0.5);
+            GL.Vertex3(-0.5, -0.5, -0.5);
+            GL.End();
+
+            // Blue side - TOP
+            GL.Begin(PrimitiveType.Polygon);
+            GL.Color4(Color4.Blue);
+            GL.Vertex3(0.5, 0.5, 0.5);
+            GL.Vertex3(0.5, 0.5, -0.5);
+            GL.Vertex3(-0.5, 0.5, -0.5);
+            GL.Vertex3(-0.5, 0.5, 0.5);
+            GL.End();
+
+            // Red side - BOTTOM
+            GL.Begin(PrimitiveType.Polygon);
+            GL.Color4(Color4.Green);
+            GL.Vertex3(0.5, -0.5, -0.5);
+            GL.Vertex3(0.5, -0.5, 0.5);
+            GL.Vertex3(-0.5, -0.5, 0.5);
+            GL.Vertex3(-0.5, -0.5, -0.5);
+            GL.End();
+        }
+
         public Cube3D()
             : base(600, 400, GraphicsMode.Default, "1-2:Camera")
         {
             VSync = VSyncMode.On;
 
-            UpdateFrame += (sender, e) =>
+            Keyboard.KeyUp += (sender, e) =>
             {
                 //Escapeキーで終了
-                if (Keyboard[Key.Escape])
+                if (e.Key == Key.Escape)
                 {
                     this.Exit();
                 }
@@ -51,60 +107,7 @@ namespace NinjaScan_GUI
                 //GL.Rotate(deg, Vector3d.UnitY);
                 //deg += 1;
 
-                GL.Begin(PrimitiveType.Polygon);
-                GL.Color4(Color4.Gray);
-                GL.Vertex3(0.5, -0.5, -0.5);      // P1 is red
-                GL.Vertex3(0.5, 0.5, -0.5);      // P2 is green
-                GL.Vertex3(-0.5, 0.5, -0.5);      // P3 is blue
-                GL.Vertex3(-0.5, -0.5, -0.5);      // P4 is purple
-                GL.End();
-
-                // White side - BACK
-                GL.Begin(PrimitiveType.Polygon);
-                GL.Color4(Color4.Yellow);
-                GL.Vertex3(0.5, -0.5, 0.5);
-                GL.Vertex3(0.5, 0.5, 0.5);
-                GL.Vertex3(-0.5, 0.5, 0.5);
-                GL.Vertex3(-0.5, -0.5, 0.5);
-                GL.End();
-
-                // Purple side - RIGHT
-                GL.Begin(PrimitiveType.Polygon);
-                GL.Color4(Color4.White);
-                GL.Vertex3(0.5, -0.5, -0.5);
-                GL.Vertex3(0.5, 0.5, -0.5);
-                GL.Vertex3(0.5, 0.5, 0.5);
-                GL.Vertex3(0.5, -0.5, 0.5);
-                GL.End();
-
-                // Green side - LEFT
-                GL.Begin(PrimitiveType.Polygon);
-                GL.Color4(Color4.Red);
-                GL.Vertex3(-0.5, -0.5, 0.5);
-                GL.Vertex3(-0.5, 0.5, 0.5);
-                GL.Vertex3(-0.5, 0.5, -0.5);
-                GL.Vertex3(-0.5, -0.5, -0.5);
-                GL.End();
-
-                // Blue side - TOP
-                GL.Begin(PrimitiveType.Polygon);
-                GL.Color4(Color4.Blue);
-                GL.Vertex3(0.5, 0.5, 0.5);
-                GL.Vertex3(0.5, 0.5, -0.5);
-                GL.Vertex3(-0.5, 0.5, -0.5);
-                GL.Vertex3(-0.5, 0.5, 0.5);
-                GL.End();
-
-                // Red side - BOTTOM
-                GL.Begin(PrimitiveType.Polygon);
-                GL.Color4(Color4.Green);
-                GL.Vertex3(0.5, -0.5, -0.5);
-                GL.Vertex3(0.5, -0.5, 0.5);
-                GL.Vertex3(-0.5, -0.5, 0.5);
-                GL.Vertex3(-0.5, -0.5, -0.5);
-                GL.End();
-
-                GL.End();
+                DrawCube();
 
                 SwapBuffers();
             };
