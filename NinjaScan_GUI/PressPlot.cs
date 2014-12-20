@@ -24,6 +24,8 @@ namespace NinjaScan_GUI
             PressPane.Title.IsVisible = false;
             PressPane.XAxis.Title.Text = "time (sec)";
             PressPane.YAxis.Title.Text = "pressure (Pa)";
+            PressPane.Y2Axis.IsVisible = true;
+            PressPane.Y2Axis.Title.Text = "temperature (degC)";
 
             // Save 1200 points.  At 50 ms sample rate, this is one minute
             // The RollingPointPairList is an efficient storage class that always
@@ -33,8 +35,9 @@ namespace NinjaScan_GUI
 
             // Initially, a curve is added with no data points (list is empty)
             // Color is blue, and there will be no symbols
-            LineItem curve = PressPane.AddCurve("pressure", xlist, Color.Blue, SymbolType.None);
-            curve = PressPane.AddCurve("temparature", ylist, Color.Red, SymbolType.None);
+            LineItem curve1 = PressPane.AddCurve("pressure", xlist, Color.Blue, SymbolType.None);
+            LineItem curve2 = PressPane.AddCurve("temparature", ylist, Color.Red, SymbolType.None);
+            curve2.IsY2Axis = true;
 
             // Sample at 50ms intervals
             timer1.Interval = 250;
@@ -49,6 +52,15 @@ namespace NinjaScan_GUI
             PressPane.XAxis.Scale.MajorStep = 5;
             PressPane.YAxis.Scale.Max = 110000;
             PressPane.YAxis.Scale.Min = 110000 / 5;
+            PressPane.YAxis.MajorTic.IsOpposite = false;
+            PressPane.YAxis.MinorTic.IsOpposite = false;
+            PressPane.Y2Axis.MajorTic.IsOpposite = false;
+            PressPane.Y2Axis.MinorTic.IsOpposite = false;
+            PressPane.Y2Axis.MajorGrid.IsZeroLine = false;
+            PressPane.Y2Axis.Scale.MajorStep = 20;
+            PressPane.Y2Axis.Scale.MinorStep = 5;
+            PressPane.Y2Axis.Scale.Max = 80;
+            PressPane.Y2Axis.Scale.Min = -20;
 
             // Scale the axes
             zedGraphControl1.AxisChange();
@@ -89,7 +101,7 @@ namespace NinjaScan_GUI
             // 3 seconds per cycle
             //list.Add(time, Math.Sin(2.0 * Math.PI * time / 3.0));
             xlist.Add(time, Form1.press);
-            ylist.Add(time, Form1.temp);
+            ylist.Add(time, Form1.temp / 100);
 
             // Keep the X scale at a rolling 30 second interval, with one
             // major step between the max X value and the end of the axis
