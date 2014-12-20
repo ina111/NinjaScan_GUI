@@ -51,7 +51,7 @@ namespace NinjaScan_GUI
                 //GL.Rotate(deg, Vector3d.UnitY);
                 //deg += 1;
 
-                GL.Begin(BeginMode.Polygon);
+                GL.Begin(PrimitiveType.Polygon);
                 GL.Color4(Color4.Gray);
                 GL.Vertex3(0.5, -0.5, -0.5);      // P1 is red
                 GL.Vertex3(0.5, 0.5, -0.5);      // P2 is green
@@ -60,7 +60,7 @@ namespace NinjaScan_GUI
                 GL.End();
 
                 // White side - BACK
-                GL.Begin(BeginMode.Polygon);
+                GL.Begin(PrimitiveType.Polygon);
                 GL.Color4(Color4.Yellow);
                 GL.Vertex3(0.5, -0.5, 0.5);
                 GL.Vertex3(0.5, 0.5, 0.5);
@@ -69,7 +69,7 @@ namespace NinjaScan_GUI
                 GL.End();
 
                 // Purple side - RIGHT
-                GL.Begin(BeginMode.Polygon);
+                GL.Begin(PrimitiveType.Polygon);
                 GL.Color4(Color4.White);
                 GL.Vertex3(0.5, -0.5, -0.5);
                 GL.Vertex3(0.5, 0.5, -0.5);
@@ -78,7 +78,7 @@ namespace NinjaScan_GUI
                 GL.End();
 
                 // Green side - LEFT
-                GL.Begin(BeginMode.Polygon);
+                GL.Begin(PrimitiveType.Polygon);
                 GL.Color4(Color4.Red);
                 GL.Vertex3(-0.5, -0.5, 0.5);
                 GL.Vertex3(-0.5, 0.5, 0.5);
@@ -87,7 +87,7 @@ namespace NinjaScan_GUI
                 GL.End();
 
                 // Blue side - TOP
-                GL.Begin(BeginMode.Polygon);
+                GL.Begin(PrimitiveType.Polygon);
                 GL.Color4(Color4.Blue);
                 GL.Vertex3(0.5, 0.5, 0.5);
                 GL.Vertex3(0.5, 0.5, -0.5);
@@ -96,7 +96,7 @@ namespace NinjaScan_GUI
                 GL.End();
 
                 // Red side - BOTTOM
-                GL.Begin(BeginMode.Polygon);
+                GL.Begin(PrimitiveType.Polygon);
                 GL.Color4(Color4.Green);
                 GL.Vertex3(0.5, -0.5, -0.5);
                 GL.Vertex3(0.5, -0.5, 0.5);
