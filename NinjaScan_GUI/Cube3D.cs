@@ -22,6 +22,92 @@ namespace NinjaScan_GUI
             : base(600, 400, GraphicsMode.Default, "1-2:Camera")
         {
             VSync = VSyncMode.On;
+
+            UpdateFrame += (sender, e) =>
+            {
+                //Escapeキーで終了
+                if (Keyboard[Key.Escape])
+                {
+                    this.Exit();
+                }
+            };
+
+            RenderFrame += (sender, e) =>
+            {
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+                GL.MatrixMode(MatrixMode.Modelview);
+                Vector3 eyepoint = new Vector3(0, 0, -3);
+                Matrix4 modelview = Matrix4.LookAt(eyepoint, Vector3.UnitZ, Vector3.UnitY);
+                GL.LoadMatrix(ref modelview);
+
+                Quaternion q = new Quaternion(Form1.AHRS.Quaternion[1],
+                    Form1.AHRS.Quaternion[2],
+                    Form1.AHRS.Quaternion[3],
+                    Form1.AHRS.Quaternion[0]);
+                q.ToAxisAngle(out vec3, out angle);
+                GL.Rotate((float)(angle * 180 / Math.PI), vec3);
+
+                //GL.Rotate(deg, Vector3d.UnitY);
+                //deg += 1;
+
+                GL.Begin(BeginMode.Polygon);
+                GL.Color4(Color4.Gray);
+                GL.Vertex3(0.5, -0.5, -0.5);      // P1 is red
+                GL.Vertex3(0.5, 0.5, -0.5);      // P2 is green
+                GL.Vertex3(-0.5, 0.5, -0.5);      // P3 is blue
+                GL.Vertex3(-0.5, -0.5, -0.5);      // P4 is purple
+                GL.End();
+
+                // White side - BACK
+                GL.Begin(BeginMode.Polygon);
+                GL.Color4(Color4.Yellow);
+                GL.Vertex3(0.5, -0.5, 0.5);
+                GL.Vertex3(0.5, 0.5, 0.5);
+                GL.Vertex3(-0.5, 0.5, 0.5);
+                GL.Vertex3(-0.5, -0.5, 0.5);
+                GL.End();
+
+                // Purple side - RIGHT
+                GL.Begin(BeginMode.Polygon);
+                GL.Color4(Color4.White);
+                GL.Vertex3(0.5, -0.5, -0.5);
+                GL.Vertex3(0.5, 0.5, -0.5);
+                GL.Vertex3(0.5, 0.5, 0.5);
+                GL.Vertex3(0.5, -0.5, 0.5);
+                GL.End();
+
+                // Green side - LEFT
+                GL.Begin(BeginMode.Polygon);
+                GL.Color4(Color4.Red);
+                GL.Vertex3(-0.5, -0.5, 0.5);
+                GL.Vertex3(-0.5, 0.5, 0.5);
+                GL.Vertex3(-0.5, 0.5, -0.5);
+                GL.Vertex3(-0.5, -0.5, -0.5);
+                GL.End();
+
+                // Blue side - TOP
+                GL.Begin(BeginMode.Polygon);
+                GL.Color4(Color4.Blue);
+                GL.Vertex3(0.5, 0.5, 0.5);
+                GL.Vertex3(0.5, 0.5, -0.5);
+                GL.Vertex3(-0.5, 0.5, -0.5);
+                GL.Vertex3(-0.5, 0.5, 0.5);
+                GL.End();
+
+                // Red side - BOTTOM
+                GL.Begin(BeginMode.Polygon);
+                GL.Color4(Color4.Green);
+                GL.Vertex3(0.5, -0.5, -0.5);
+                GL.Vertex3(0.5, -0.5, 0.5);
+                GL.Vertex3(-0.5, -0.5, 0.5);
+                GL.Vertex3(-0.5, -0.5, -0.5);
+                GL.End();
+
+                GL.End();
+
+                SwapBuffers();
+            };
         }
 
         // Windowの起動時に実行
@@ -41,100 +127,6 @@ namespace NinjaScan_GUI
             GL.MatrixMode(MatrixMode.Projection);
             Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, (float)Width / (float)Height, 1.0f, 64.0f);
             GL.LoadMatrix(ref projection);
-        }
-
-        //画面更新で実行される。
-        protected override void OnUpdateFrame(FrameEventArgs e)
-        {
-            base.OnUpdateFrame(e);
-
-            //Escapeキーで終了
-            if (Keyboard[Key.Escape])
-            {
-                this.Exit();
-            }
-        }
-
-        //画面描画で実行される。
-        protected override void OnRenderFrame(FrameEventArgs e)
-        {
-            base.OnRenderFrame(e);
-
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-            GL.MatrixMode(MatrixMode.Modelview);
-            Vector3 eyepoint = new Vector3(0, 0, -3);
-            Matrix4 modelview = Matrix4.LookAt(eyepoint, Vector3.UnitZ, Vector3.UnitY);
-            GL.LoadMatrix(ref modelview);
-
-            Quaternion q = new Quaternion(Form1.AHRS.Quaternion[1],
-                Form1.AHRS.Quaternion[2],
-                Form1.AHRS.Quaternion[3],
-                Form1.AHRS.Quaternion[0]);
-            q.ToAxisAngle(out vec3, out angle);
-            GL.Rotate((float)(angle * 180 / Math.PI), vec3);
-
-            //GL.Rotate(deg, Vector3d.UnitY);
-            //deg += 1;
-
-            GL.Begin(BeginMode.Polygon);
-            GL.Color4(Color4.Gray);
-            GL.Vertex3(0.5, -0.5, -0.5);      // P1 is red
-            GL.Vertex3(0.5, 0.5, -0.5);      // P2 is green
-            GL.Vertex3(-0.5, 0.5, -0.5);      // P3 is blue
-            GL.Vertex3(-0.5, -0.5, -0.5);      // P4 is purple
-            GL.End();
-
-            // White side - BACK
-            GL.Begin(BeginMode.Polygon);
-            GL.Color4(Color4.Yellow);
-            GL.Vertex3(0.5, -0.5, 0.5);
-            GL.Vertex3(0.5, 0.5, 0.5);
-            GL.Vertex3(-0.5, 0.5, 0.5);
-            GL.Vertex3(-0.5, -0.5, 0.5);
-            GL.End();
-
-            // Purple side - RIGHT
-            GL.Begin(BeginMode.Polygon);
-            GL.Color4(Color4.White);
-            GL.Vertex3(0.5, -0.5, -0.5);
-            GL.Vertex3(0.5, 0.5, -0.5);
-            GL.Vertex3(0.5, 0.5, 0.5);
-            GL.Vertex3(0.5, -0.5, 0.5);
-            GL.End();
-
-            // Green side - LEFT
-            GL.Begin(BeginMode.Polygon);
-            GL.Color4(Color4.Red);
-            GL.Vertex3(-0.5, -0.5, 0.5);
-            GL.Vertex3(-0.5, 0.5, 0.5);
-            GL.Vertex3(-0.5, 0.5, -0.5);
-            GL.Vertex3(-0.5, -0.5, -0.5);
-            GL.End();
-
-            // Blue side - TOP
-            GL.Begin(BeginMode.Polygon);
-            GL.Color4(Color4.Blue);
-            GL.Vertex3(0.5, 0.5, 0.5);
-            GL.Vertex3(0.5, 0.5, -0.5);
-            GL.Vertex3(-0.5, 0.5, -0.5);
-            GL.Vertex3(-0.5, 0.5, 0.5);
-            GL.End();
-
-            // Red side - BOTTOM
-            GL.Begin(BeginMode.Polygon);
-            GL.Color4(Color4.Green);
-            GL.Vertex3(0.5, -0.5, -0.5);
-            GL.Vertex3(0.5, -0.5, 0.5);
-            GL.Vertex3(-0.5, -0.5, 0.5);
-            GL.Vertex3(-0.5, -0.5, -0.5);
-            GL.End();
-            
-            
-
-            GL.End();
-
-            SwapBuffers();
         }
     }
 }
