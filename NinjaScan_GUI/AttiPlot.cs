@@ -34,9 +34,9 @@ namespace NinjaScan_GUI
 
             // Initially, a curve is added with no data points (list is empty)
             // Color is blue, and there will be no symbols
-            LineItem curve = gyroPane.AddCurve("x axis", gxlist, Color.Blue, SymbolType.None);
-            curve = gyroPane.AddCurve("y axis", gylist, Color.Red, SymbolType.None);
-            curve = gyroPane.AddCurve("z axis", gzlist, Color.Green, SymbolType.None);
+            LineItem curve = gyroPane.AddCurve("Pitch", gxlist, Color.Blue, SymbolType.None);
+            curve = gyroPane.AddCurve("Roll", gylist, Color.Red, SymbolType.None);
+            curve = gyroPane.AddCurve("Yaw", gzlist, Color.Green, SymbolType.None);
 
             // Sample at 50ms intervals
             timer1.Interval = 10;
@@ -127,38 +127,6 @@ namespace NinjaScan_GUI
         private void numericUpDown1_ValueChanged(object sender, EventArgs e)
         {
             gyroPane.XAxis.Scale.Max = (double)numericUpDown1.Value;
-        }
-
-        /// <summary>
-        /// Y軸のパラメータ変更したときのイベント
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void radioButton1_CheckedChanged(object sender, EventArgs e)
-        {
-            if (radioButton1.Checked)
-            {
-                gyroPane.YAxis.Scale.Max = 180;
-                gyroPane.YAxis.Scale.Min = -180;
-            }
-        }
-
-        private void radioButton2_CheckedChanged(object sender, EventArgs e)
-        {
-            if (radioButton2.Checked)
-            {
-                gyroPane.YAxis.Scale.Max = 180;
-                gyroPane.YAxis.Scale.Min = -180;
-            }
-        }
-
-        private void radioButton3_CheckedChanged(object sender, EventArgs e)
-        {
-            if (radioButton3.Checked)
-            {
-                gyroPane.YAxis.Scale.Max = 180;
-                gyroPane.YAxis.Scale.Min = -180;
-            }
         }
 
         private void button1_Click(object sender, EventArgs e)
