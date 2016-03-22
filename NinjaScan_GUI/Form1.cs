@@ -10,6 +10,9 @@ using System.Windows.Forms;
 using System.IO.Ports;
 using System.IO;
 using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
@@ -41,13 +44,21 @@ namespace NinjaScan_GUI
         public static double press, temp;
         public static double latitude, longitude, altitude;
 
-                
+        public const uint tcp_port = 28080;
+
+        private void updatePortList(){
+            comboBoxCOM.Items.Clear();
+            string[] serial_ports = SerialPort.GetPortNames();
+            string[] ports = new string[serial_ports.Length + 1];
+            Array.Copy(serial_ports, ports, serial_ports.Length);
+            ports[ports.Length - 1] = string.Format("TCP({0}:{1})", Dns.GetHostEntry(Dns.GetHostName()).AddressList[0], tcp_port);
+            comboBoxCOM.Items.AddRange(ports);
+        }
+
         public Form1()
         {
             InitializeComponent();
-
-            comboBoxCOM.Items.AddRange(SerialPort.GetPortNames());
-
+            updatePortList();
         }
 
         private void butonGyro_Click(object sender, EventArgs e)
@@ -103,9 +114,7 @@ namespace NinjaScan_GUI
         private void buttonCOMlist_Click(object sender, EventArgs e)
         {
             comboBoxCOM.SelectedItem = null;
-            comboBoxCOM.Items.Clear();
-            string[] ports = SerialPort.GetPortNames();
-            comboBoxCOM.Items.AddRange(ports);
+            updatePortList();
         }
 
         private void buttonConnect_Click(object sender, EventArgs e)
@@ -114,23 +123,34 @@ namespace NinjaScan_GUI
             {
                 try
                 {
-                    string PortName = comboBoxCOM.SelectedItem.ToString();
-                    myPort = new SerialPort(PortName, 115200, Parity.None, 8, StopBits.One);
-                    myPort.Open();
+                    string PortName = comboBoxCOM.Text;
+                    MessageBox.Show(PortName);
+                    Match m = Regex.Match(PortName, @"TCP\(((?:\d+\.){3}\d+):(\d+)\)");
 
-                    st = myPort.BaseStream;
-                    BufferedStream st_buffer = new BufferedStream(st);
-                    BinaryReader br = new BinaryReader(st_buffer);
+                    if (m.Success) // TCP
+                    {
+                        //MessageBox.Show(string.Format("TCP({0}:{1})", m.Groups[1].Value, m.Groups[2].Value));
+                        throw new NullReferenceException();
+                    }
+                    else
+                    { // COM
+                        myPort = new SerialPort(PortName, 115200, Parity.None, 8, StopBits.One);
+                        myPort.Open();
 
-                    comboBoxCOM.Enabled = false;
-                    buttonCOMlist.Enabled = false;
-                    buttonConnect.Text = "Disconnect";
+                        st = myPort.BaseStream;
+                        BufferedStream st_buffer = new BufferedStream(st);
+                        BinaryReader br = new BinaryReader(st_buffer);
 
-                    // バックグラウンド処理
-                    var task = Task.Factory.StartNew(() =>
+                        comboBoxCOM.Enabled = false;
+                        buttonCOMlist.Enabled = false;
+                        buttonConnect.Text = "Disconnect";
+
+                        // バックグラウンド処理
+                        var task = Task.Factory.StartNew(() =>
                         {
                             Consol_Output(br);
                         });
+                    }
                 }
                 catch (IOException)
                 {
@@ -142,7 +162,7 @@ namespace NinjaScan_GUI
                 }
                 catch (NullReferenceException)
                 {
-                    MessageBox.Show("you must select COM port", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("you must select appropriate port", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 catch (Exception except)
                 { Console.WriteLine(except.ToString()); }
