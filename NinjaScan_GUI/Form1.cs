@@ -285,7 +285,6 @@ namespace NinjaScan_GUI
                 pages.g.Update(br);
                 Console.Write("[G page]:");
                 Console.Write(pages.g.ubx_raw + "\n");
-                pages.g.SeekHead(pages.g.analysisObject);
             }
 
             // ファイルが開いているなら書き込みを行う。
@@ -316,7 +315,7 @@ namespace NinjaScan_GUI
             else if (head == G_Page.header)
             {
                 gfs.Write(pages.g.ubx_raw, 0, pages.g.ubx_raw.Length);
-                if (pages.g.isOutput == true)
+                if (pages.g.hasOutput == true)
                 {
                     gsw.WriteLine(pages.g.ubx.nmea.gpgga);
                     gsw.WriteLine(pages.g.ubx.nmea.gpzda);
@@ -466,8 +465,7 @@ namespace NinjaScan_GUI
                     {
                         pages_sd.g.Update(br);
                         ubx_G_sd.Write(pages_sd.g.ubx_raw); // GPS pageだけubx形式
-                        pages_sd.g.SeekHead(pages_sd.g.analysisObject);
-                        if (pages_sd.g.isOutput == true)
+                        if (pages_sd.g.hasOutput == true)
                         {
                             csv_G_sd.WriteLine(pages_sd.g.ubx.nmea.gpgga);
                             if (pages_sd.g.ubx.nmea.time.Second == 0 && pages_sd.g.ubx.nmea.time.Millisecond == 0)
