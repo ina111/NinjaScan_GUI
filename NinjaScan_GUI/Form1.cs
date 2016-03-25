@@ -34,16 +34,10 @@ namespace NinjaScan_GUI
         StreamWriter csv_G = new StreamWriter(Stream.Null);
         FileStream ubx_G = new FileStream("garbage.bin", FileMode.Append, FileAccess.Write);
 
-        public static AHRS.MadgwickAHRS AHRS = new AHRS.MadgwickAHRS(1f / 100f, 0.1f);
+        public AHRS.MadgwickAHRS AHRS = new AHRS.MadgwickAHRS(1f / 100f, 0.1f);
 
-        public static double gpstime;
-        public static double ax, ay, az;
-        public static double gx, gy, gz;
-        public static double drift_gx, drift_gy, drift_gz;
-        public static double mx, my, mz;
-        public static double press, temp;
-        public static double latitude, longitude, altitude;
-
+        public double drift_gx, drift_gy, drift_gz;
+        
         public const uint defaultTcpPort = 28080;
 
         private void updatePortList(){
@@ -63,43 +57,43 @@ namespace NinjaScan_GUI
 
         private void butonGyro_Click(object sender, EventArgs e)
         {
-            GyroPlot gp = new GyroPlot();
+            GyroPlot gp = new GyroPlot(this);
             gp.Show();
         }
 
         private void buttonAcc_Click(object sender, EventArgs e)
         {
-            AccPlot ap = new AccPlot();
+            AccPlot ap = new AccPlot(this);
             ap.Show();
         }
 
         private void buttonMag_Click(object sender, EventArgs e)
         {
-            MagPlot mp = new MagPlot();
+            MagPlot mp = new MagPlot(this);
             mp.Show();
         }
 
         private void buttonPress_Click(object sender, EventArgs e)
         {
-            PressPlot pp = new PressPlot();
+            PressPlot pp = new PressPlot(this);
             pp.Show();
         }
 
         private void buttonAtti_Click(object sender, EventArgs e)
         {
-            AttiPlot atp = new AttiPlot();
+            AttiPlot atp = new AttiPlot(this);
             atp.Show();
         }
 
         private void buttonMap_Click(object sender, EventArgs e)
         {
-            GoogleEarth ge = new GoogleEarth();
+            GoogleEarth ge = new GoogleEarth(this);
             ge.Show();
         }
 
         private void button3DCube_Click(object sender, EventArgs e)
         {
-            using(Cube3D c3d = new Cube3D())
+            using(Cube3D c3d = new Cube3D(this))
             {
                 c3d.Run(30.0);
             }
@@ -188,6 +182,15 @@ namespace NinjaScan_GUI
             }
         }
 
+        public class SylphidePages
+        {
+            public A_Page a = new A_Page();
+            public P_Page p = new P_Page();
+            public M_Page m = new M_Page();
+            public G_Page g = new G_Page();
+        }
+        public SylphidePages pages = new SylphidePages();
+
         private void readPacket(Stream st, CancellationToken token)
         {
             byte[] buf = new byte[0x40];
@@ -252,52 +255,39 @@ namespace NinjaScan_GUI
             byte head = br.ReadByte();
             if (head == A_Page.header)
             {
-                A_Page.Read(br);
+                pages.a.Update(br);
                 Console.Write("[A page]:");
-                Console.Write(A_Page.ax + "," + A_Page.ay + "," + A_Page.az + "," +
-                    A_Page.gx + "," + A_Page.gy + "," + A_Page.gz + "\n");
-
-                gpstime = A_Page.gps_time;
-                ax = A_Page.cal_ax;
-                ay = A_Page.cal_ay;
-                az = A_Page.cal_az;
-                gx = A_Page.cal_gx;
-                gy = A_Page.cal_gy;
-                gz = A_Page.cal_gz;
-                A_Page.drift_gx = drift_gx;
-                A_Page.drift_gy = drift_gy;
-                A_Page.drift_gz = drift_gz;
-                AHRS.Update((float)gx / 180 * (float)Math.PI, (float)(gy / 180 * Math.PI), (float)(gz / 180 * Math.PI), (float)ax, (float)ay, (float)az);
+                Console.Write(
+                    pages.a.ax + "," + pages.a.ay + "," + pages.a.az + "," +
+                    pages.a.gx + "," + pages.a.gy + "," + pages.a.gz + "\n");
+                
+                AHRS.Update(
+                    (float)pages.a.cal_gx / 180 * (float)Math.PI,
+                    (float)pages.a.cal_gy / 180 * (float)Math.PI,
+                    (float)pages.a.cal_gz / 180 * (float)Math.PI,
+                    (float)pages.a.cal_ax, (float)pages.a.cal_ay, (float)pages.a.cal_az);
                 //AHRS.Update((float)gx, (float)gy, (float)gz, (float)ax, (float)ay, (float)az, (float)mx, (float)my, (float)mz);
                 AHRS.Quaternion2Euler(AHRS.Quaternion);
-
             }
             else if (head == P_Page.header)
             {
-                P_Page.Read(br);
+                pages.p.Update(br);
                 Console.Write("[P page]:");
-                Console.Write(P_Page.pressure * 0.01 + "(hPa)\n");
-
-                press = P_Page.pressure;
-                temp = P_Page.temperature;
+                Console.Write(pages.p.pressure * 0.01 + "(hPa)\n");
             }
             else if (head == M_Page.header)
             {
-                M_Page.Read(br);
+                pages.m.Update(br);
                 Console.Write("[M page]:");
                 double conv = 0.1;
-                Console.Write(M_Page.mx * conv + "," + M_Page.my * conv + "," + M_Page.mz * conv + "\n");
-
-                mx = M_Page.cal_mx;
-                my = M_Page.cal_my;
-                mz = M_Page.cal_mz;
+                Console.Write(pages.m.mx * conv + "," + pages.m.my * conv + "," + pages.m.mz * conv + "\n");
             }
             else if (head == G_Page.header)
             {
-                G_Page.Read(br);
+                pages.g.Update(br);
                 Console.Write("[G page]:");
-                Console.Write(G_Page.ubx + "\n");
-                G_Page.SeekHead(G_Page.analysisObject);
+                Console.Write(pages.g.ubx_raw + "\n");
+                pages.g.SeekHead(pages.g.analysisObject);
             }
 
             // ファイルが開いているなら書き込みを行う。
@@ -311,27 +301,27 @@ namespace NinjaScan_GUI
         {
             if (head == A_Page.header)
             {
-                asw.WriteLine(gpstime.ToString() + ","
-                    + ax.ToString() + "," + ay.ToString() + "," + az.ToString() + ","
-                    + gx.ToString() + "," + gy.ToString() + "," + gz.ToString());
+                asw.WriteLine(pages.a.gps_time.ToString() + ","
+                    + pages.a.cal_ax.ToString() + "," + pages.a.cal_ay.ToString() + "," + pages.a.cal_az.ToString() + ","
+                    + pages.a.cal_gx.ToString() + "," + pages.a.cal_gy.ToString() + "," + pages.a.cal_gz.ToString());
             }
             else if (head == M_Page.header)
             {
-                msw.WriteLine(gpstime.ToString() + ","
-                    + mx.ToString() + "," + my.ToString() + "," + mz.ToString());
+                msw.WriteLine(pages.m.gps_time.ToString() + ","
+                    + pages.m.cal_mx.ToString() + "," + pages.m.cal_my.ToString() + "," + pages.m.cal_mz.ToString());
             }
             else if (head == P_Page.header)
             {
-                psw.WriteLine(gpstime.ToString() + ","
-                    + press.ToString() + "," + temp.ToString());
+                psw.WriteLine(pages.p.gps_time.ToString() + ","
+                    + pages.p.pressure.ToString() + "," + pages.p.temperature.ToString());
             }
             else if (head == G_Page.header)
             {
-                gfs.Write(G_Page.ubx, 0, G_Page.ubx.Length);
-                if (G_Page.isOutput == true)
+                gfs.Write(pages.g.ubx_raw, 0, pages.g.ubx_raw.Length);
+                if (pages.g.isOutput == true)
                 {
-                    gsw.WriteLine(UBX.NMEA_GPGGA);
-                    gsw.WriteLine(UBX.NMEA_GPZDA);
+                    gsw.WriteLine(pages.g.ubx.nmea.gpgga);
+                    gsw.WriteLine(pages.g.ubx.nmea.gpzda);
                 }
             }
         }
@@ -447,47 +437,42 @@ namespace NinjaScan_GUI
             {
                 BinaryReader br = new BinaryReader(File.OpenRead(input_file));
 
+                SylphidePages pages_sd = new SylphidePages();
+
                 do
                 {
                     // LOG.DATの場合はProtocolのheaderの頭出しは必要ない
                     byte head = br.ReadByte();
                     if (head == A_Page.header)
                     {
-                        A_Page.Read(br);
-                        //csv_A_sd.WriteLine(A_Page..gps_time + "," +
-                        //    A_Page..ax + "," + A_Page..ay + "," + A_Page..az + "," +
-                        //    A_Page..gx + "," + A_Page..gy + "," + A_Page.gz);
-                        csv_A_sd.WriteLine(A_Page.gps_time + "," +
-                            A_Page.cal_ax + "," + A_Page.cal_ay + "," + A_Page.cal_az + "," +
-                            A_Page.cal_gx + "," + A_Page.cal_gy + "," + A_Page.cal_gz);
+                        pages_sd.a.Update(br);
+                        csv_A_sd.WriteLine(pages_sd.a.gps_time + "," +
+                            pages_sd.a.cal_ax + "," + pages_sd.a.cal_ay + "," + pages_sd.a.cal_az + "," +
+                            pages_sd.a.cal_gx + "," + pages_sd.a.cal_gy + "," + pages_sd.a.cal_gz);
                     }
                     else if (head == P_Page.header)
                     {
-                        P_Page.Read(br);
-                        //csv_P_sd.WriteLine(P_Page.gps_time + "," +
-                        //    P_Page.pressure + "," + P_Page.temperature);
-                        csv_P_sd.WriteLine(P_Page.gps_time + "," +
-                            P_Page.pressure + "," + (double)P_Page.temperature * 0.01);
+                        pages_sd.p.Update(br);
+                        csv_P_sd.WriteLine(pages_sd.p.gps_time + "," +
+                            pages_sd.p.pressure + "," + (double)pages_sd.p.temperature * 0.01);
                     }
                     else if (head == M_Page.header)
                     {
-                        M_Page.Read(br);
-                        //csv_M_sd.WriteLine(M_Page.gps_time + "," +
-                        //    M_Page.mx + "," + M_Page.my + "," + M_Page.mz);
-                        csv_M_sd.WriteLine(M_Page.gps_time + "," +
-                            M_Page.cal_mx + "," + M_Page.cal_my + "," + M_Page.cal_mz);
+                        pages_sd.m.Update(br);
+                        csv_M_sd.WriteLine(pages_sd.m.gps_time + "," +
+                            pages_sd.m.cal_mx + "," + pages_sd.m.cal_my + "," + pages_sd.m.cal_mz);
                     }
                     else if (head == G_Page.header)
                     {
-                        G_Page.Read(br);
-                        ubx_G_sd.Write(G_Page.ubx); // GPS pageだけubx形式
-                        G_Page.SeekHead(G_Page.analysisObject);
-                        if (G_Page.isOutput == true)
+                        pages_sd.g.Update(br);
+                        ubx_G_sd.Write(pages_sd.g.ubx_raw); // GPS pageだけubx形式
+                        pages_sd.g.SeekHead(pages_sd.g.analysisObject);
+                        if (pages_sd.g.isOutput == true)
                         {
-                            csv_G_sd.WriteLine(UBX.NMEA_GPGGA);
-                            if (UBX.time.Second == 0 && UBX.time.Millisecond == 0)
+                            csv_G_sd.WriteLine(pages_sd.g.ubx.nmea.gpgga);
+                            if (pages_sd.g.ubx.nmea.time.Second == 0 && pages_sd.g.ubx.nmea.time.Millisecond == 0)
                             {
-                                csv_G_sd.WriteLine(UBX.NMEA_GPZDA);
+                                csv_G_sd.WriteLine(pages_sd.g.ubx.nmea.gpzda);
                             }
                         }
                     }

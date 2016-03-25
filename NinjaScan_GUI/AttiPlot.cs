@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ZedGraph;
+using NinjaScan;
 
 namespace NinjaScan_GUI
 {
@@ -16,9 +17,14 @@ namespace NinjaScan_GUI
         int tickStart = 0;
         GraphPane gyroPane;
 
+        A_Page a_page;
+        AHRS.MadgwickAHRS ahrs;
 
-        public AttiPlot()
+        public AttiPlot(Form1 owner)
         {
+            a_page = owner.pages.a;
+            ahrs = owner.AHRS;
+
             InitializeComponent();
             gyroPane = zedGraphControl1.GraphPane;
             gyroPane.Title.IsVisible = false;
@@ -88,13 +94,13 @@ namespace NinjaScan_GUI
 
             // Time is measured in seconds
             //double time = (Environment.TickCount - tickStart) / 1000.0;
-            double time = Form1.gpstime / 1000.0;
+            double time = a_page.gps_time / 1000.0;
 
             // 3 seconds per cycle
             //list.Add(time, Math.Sin(2.0 * Math.PI * time / 3.0));
-            gxlist.Add(time, Form1.AHRS.Euler_deg[0]);
-            gylist.Add(time, Form1.AHRS.Euler_deg[1]);
-            gzlist.Add(time, Form1.AHRS.Euler_deg[2]);
+            gxlist.Add(time, ahrs.Euler_deg[0]);
+            gylist.Add(time, ahrs.Euler_deg[1]);
+            gzlist.Add(time, ahrs.Euler_deg[2]);
 
             // Keep the X scale at a rolling 30 second interval, with one
             // major step between the max X value and the end of the axis
