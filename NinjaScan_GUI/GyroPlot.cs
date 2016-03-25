@@ -209,11 +209,9 @@ namespace NinjaScan_GUI
 
         private void buttonSetDrift_Click(object sender, EventArgs e)
         {
-            Form1 owner = (Form1)this.Owner;
-            
-            owner.drift_gx += mean_x;
-            owner.drift_gy += mean_y;
-            owner.drift_gz += mean_z;
+            a_page.calibrationData.drift_gx += mean_x;
+            a_page.calibrationData.drift_gy += mean_y;
+            a_page.calibrationData.drift_gz += mean_z;
         }
 
 

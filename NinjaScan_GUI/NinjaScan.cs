@@ -57,6 +57,8 @@ namespace NinjaScan
         
         public static CalibrationData defaultCalibrationData;
 
+        public CalibrationData calibrationData = defaultCalibrationData;
+
         static A_Page()
         {
             defaultCalibrationData = new CalibrationData();
@@ -96,7 +98,7 @@ namespace NinjaScan
             pressure = Read_3byte_BigEndian(input.ReadBytes(3)); //すごいロガーではNo Data
             temp_press = Read_3byte_BigEndian(input.ReadBytes(3)); //すごいロガーではNo Data
             temp_gyro = BitConverter.ToInt16(input.ReadBytes(2), 0);
-            Convert_A_page(defaultCalibrationData);
+            Convert_A_page(calibrationData);
         }
 
         private static UInt32 Read_3byte_BigEndian(byte[] data)
@@ -147,6 +149,8 @@ namespace NinjaScan
         
         public static CalibrationData defaultCalibrationData;
 
+        public CalibrationData calibrationData = defaultCalibrationData;
+
         static M_Page()
         {
             defaultCalibrationData = new CalibrationData();
@@ -168,7 +172,7 @@ namespace NinjaScan
             my = Read_2byte_BigEndian(input.ReadBytes(2));
             mz = Read_2byte_BigEndian(input.ReadBytes(2));
             input.ReadBytes(18);
-            Convert_M_page(defaultCalibrationData);
+            Convert_M_page(calibrationData);
         }
 
         private void Convert_M_page(CalibrationData calib)

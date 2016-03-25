@@ -35,8 +35,6 @@ namespace NinjaScan_GUI
         FileStream ubx_G = new FileStream("garbage.bin", FileMode.Append, FileAccess.Write);
 
         public AHRS.MadgwickAHRS AHRS = new AHRS.MadgwickAHRS(1f / 100f, 0.1f);
-
-        public double drift_gx, drift_gy, drift_gz;
         
         public const uint defaultTcpPort = 28080;
 
