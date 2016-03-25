@@ -335,7 +335,7 @@ namespace NinjaScan_GUI
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.FileName = "LOG.DAT";
             //ofd.InitialDirectory = @"Environment.SpecialFolder.Desktop";
-            ofd.Filter = "Sylphide binary file|LOG.DAT";
+            ofd.Filter = "Sylphide binary file|LOG.DAT|All files (*.*)|*.*";
             ofd.FilterIndex = 1;
             ofd.Title = "Select LOG.DAT";
             if (ofd.ShowDialog() == DialogResult.OK)
@@ -437,6 +437,8 @@ namespace NinjaScan_GUI
 
                 SylphidePages pages_sd = new SylphidePages();
 
+                buttonSDConvert.Text = "Converting...";
+
                 do
                 {
                     // LOG.DATの場合はProtocolのheaderの頭出しは必要ない
@@ -483,8 +485,10 @@ namespace NinjaScan_GUI
                 csv_G_sd.Close();
                 ubx_G_sd.Close();
 
-                buttonSDConvert.Enabled = true;
                 DialogResult result = MessageBox.Show("Complete to output CSV files");
+
+                buttonSDConvert.Text = "Convert";
+                buttonSDConvert.Enabled = true;
             });
 
             buttonSDConvert.Enabled = false;
