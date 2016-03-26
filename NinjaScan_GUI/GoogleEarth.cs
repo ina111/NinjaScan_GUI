@@ -13,11 +13,15 @@ namespace NinjaScan_GUI
 {
     public partial class GoogleEarth : Form
     {
+        G_Page.UBlox ubx;
+
         // 起動からの時間
         private int sec = 0;
 
-        public GoogleEarth()
+        public GoogleEarth(Form1 owner)
         {
+            ubx = owner.pages.g.ubx;
+
             InitializeComponent();
 
             if (System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
@@ -38,22 +42,19 @@ namespace NinjaScan_GUI
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            Object obj_lat = (object)Form1.latitude;
-            Object obj_lon = (object)Form1.longitude;
-            Object obj_alt = (object)Form1.altitude;
-            object[] args = { UBX.lat * Math.Pow(10, -7), UBX.lon * Math.Pow(10, -7), UBX.height };
+            object[] args = { ubx.llh.lat * Math.Pow(10, -7), ubx.llh.lon * Math.Pow(10, -7), ubx.llh.height };
             webBrowser1.Document.InvokeScript("js_func", args);
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
             sec++;
-            labelGPSFix.Text = "STATUS: " + UBX.gpsFix;
-            labelGPSLLH.Text = "latitude: " + UBX.lat + "  longitude: " + UBX.lon;
-            labelTIME.Text = "UTC TIME: " + UBX.tow_hour + ":" + UBX.tow_min + ":" + (UBX.tow_sec).ToString("F1");
-            if (sec > 25 && UBX.time.Second % 10 == 0 && UBX.time.Millisecond == 0)
+            labelGPSFix.Text = "STATUS: " + ubx.status.gpsFix;
+            labelGPSLLH.Text = "latitude: " + ubx.llh.lat + "  longitude: " + ubx.llh.lon;
+            labelTIME.Text = "UTC TIME: " + ubx.utc.hour + ":" + ubx.utc.min + ":" + ubx.utc.sec.ToString("F1");
+            if (sec >= 30 && (sec % 10 == 0))
             {
-                object[] args = { UBX.lat * Math.Pow(10, -7), UBX.lon * Math.Pow(10, -7), UBX.height };
+                object[] args = { ubx.llh.lat * Math.Pow(10, -7), ubx.llh.lon * Math.Pow(10, -7), ubx.llh.height };
                 webBrowser1.Document.InvokeScript("js_func1", args);
             }
         }

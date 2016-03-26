@@ -17,9 +17,11 @@ namespace NinjaScan_GUI
         int tickStart = 0;
         GraphPane MagPane;
 
+        M_Page m_page;
 
-        public MagPlot()
+        public MagPlot(Form1 owner)
         {
+            m_page = owner.pages.m;
             InitializeComponent();
             MagPane = zedGraphControl1.GraphPane;
             MagPane.Title.IsVisible = false;
@@ -50,8 +52,8 @@ namespace NinjaScan_GUI
             MagPane.XAxis.Scale.Max = (double)numericUpDown1.Value;
             MagPane.XAxis.Scale.MinorStep = 0.5;
             MagPane.XAxis.Scale.MajorStep = 1;
-            MagPane.YAxis.Scale.Max = M_Page.fullScale_mag / 2;
-            MagPane.YAxis.Scale.Min = -M_Page.fullScale_mag / 2;
+            MagPane.YAxis.Scale.Max = M_Page.defaultCalibrationData.fullScale_mag / 2;
+            MagPane.YAxis.Scale.Min = -M_Page.defaultCalibrationData.fullScale_mag / 2;
 
             // Scale the axes
             zedGraphControl1.AxisChange();
@@ -89,13 +91,13 @@ namespace NinjaScan_GUI
 
             // Time is measured in seconds
             //double time = (Environment.TickCount - tickStart) / 1000.0;
-            double time = Form1.gpstime / 1000.0;
+            double time = m_page.gps_time / 1000.0;
 
             // 3 seconds per cycle
             //list.Add(time, Math.Sin(2.0 * Math.PI * time / 3.0));
-            xlist.Add(time, Form1.mx);
-            ylist.Add(time, Form1.my);
-            zlist.Add(time, Form1.mz);
+            xlist.Add(time, m_page.cal_mx);
+            ylist.Add(time, m_page.cal_my);
+            zlist.Add(time, m_page.cal_mz);
 
             // Keep the X scale at a rolling 30 second interval, with one
             // major step between the max X value and the end of the axis
@@ -139,8 +141,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton1.Checked)
             {
-                MagPane.YAxis.Scale.Max = M_Page.fullScale_mag / 2;
-                MagPane.YAxis.Scale.Min = -M_Page.fullScale_mag / 2;
+                MagPane.YAxis.Scale.Max = M_Page.defaultCalibrationData.fullScale_mag / 2;
+                MagPane.YAxis.Scale.Min = -M_Page.defaultCalibrationData.fullScale_mag / 2;
             }
         }
 
@@ -148,8 +150,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton2.Checked)
             {
-                MagPane.YAxis.Scale.Max = M_Page.fullScale_mag;
-                MagPane.YAxis.Scale.Min = -M_Page.fullScale_mag;
+                MagPane.YAxis.Scale.Max = M_Page.defaultCalibrationData.fullScale_mag;
+                MagPane.YAxis.Scale.Min = -M_Page.defaultCalibrationData.fullScale_mag;
             }
         }
 
@@ -157,8 +159,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton3.Checked)
             {
-                MagPane.YAxis.Scale.Max = M_Page.fullScale_mag * 3;
-                MagPane.YAxis.Scale.Min = -M_Page.fullScale_mag * 3;
+                MagPane.YAxis.Scale.Max = M_Page.defaultCalibrationData.fullScale_mag * 3;
+                MagPane.YAxis.Scale.Min = -M_Page.defaultCalibrationData.fullScale_mag * 3;
             }
         }
 

@@ -38,8 +38,12 @@ namespace NinjaScan_GUI
 
         }
 
-        public GyroPlot()
+        A_Page a_page;
+
+        public GyroPlot(Form1 owner)
         {
+            a_page = owner.pages.a;
+
             InitializeComponent();
             gyroPane = zedGraphControl1.GraphPane;
             gyroPane.Title.IsVisible = false;
@@ -70,8 +74,8 @@ namespace NinjaScan_GUI
             gyroPane.XAxis.Scale.Max = (double)numericUpDown1.Value;
             gyroPane.XAxis.Scale.MinorStep = 0.5;
             gyroPane.XAxis.Scale.MajorStep = 1;
-            gyroPane.YAxis.Scale.Max = A_Page.fullScale_gyro / 5;
-            gyroPane.YAxis.Scale.Min = -A_Page.fullScale_gyro / 5;
+            gyroPane.YAxis.Scale.Max = A_Page.defaultCalibrationData.fullScale_gyro / 5;
+            gyroPane.YAxis.Scale.Min = -A_Page.defaultCalibrationData.fullScale_gyro / 5;
 
             // Scale the axes
             zedGraphControl1.AxisChange();
@@ -109,13 +113,13 @@ namespace NinjaScan_GUI
 
             // Time is measured in seconds
             //double time = (Environment.TickCount - tickStart) / 1000.0;
-            double time = Form1.gpstime / 1000.0;
+            double time = a_page.gps_time / 1000.0;
 
             // 3 seconds per cycle
             //list.Add(time, Math.Sin(2.0 * Math.PI * time / 3.0));
-            gxlist.Add(time, Form1.gx);
-            gylist.Add(time, Form1.gy);
-            gzlist.Add(time, Form1.gz);
+            gxlist.Add(time, a_page.cal_gx);
+            gylist.Add(time, a_page.cal_gy);
+            gzlist.Add(time, a_page.cal_gz);
 
             // Keep the X scale at a rolling 30 second interval, with one
             // major step between the max X value and the end of the axis
@@ -135,7 +139,7 @@ namespace NinjaScan_GUI
 
 
             // 平均の表示
-            SMA_Update(Form1.gx, Form1.gy, Form1.gz);
+            SMA_Update(a_page.cal_gx, a_page.cal_gy, a_page.cal_gz);
             labelx.Text = "x (deg/s) :" + mean_x.ToString("F5");
             labely.Text = "y (deg/s) :" + mean_y.ToString("F5");
             labelz.Text = "z (deg/s) :" + mean_z.ToString("F5");
@@ -166,8 +170,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton1.Checked)
             {
-                gyroPane.YAxis.Scale.Max = A_Page.fullScale_gyro / 5;
-                gyroPane.YAxis.Scale.Min = -A_Page.fullScale_gyro / 5;
+                gyroPane.YAxis.Scale.Max = A_Page.defaultCalibrationData.fullScale_gyro / 5;
+                gyroPane.YAxis.Scale.Min = -A_Page.defaultCalibrationData.fullScale_gyro / 5;
             }
         }
 
@@ -175,8 +179,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton2.Checked)
             {
-                gyroPane.YAxis.Scale.Max = A_Page.fullScale_gyro / 2;
-                gyroPane.YAxis.Scale.Min = -A_Page.fullScale_gyro / 2;
+                gyroPane.YAxis.Scale.Max = A_Page.defaultCalibrationData.fullScale_gyro / 2;
+                gyroPane.YAxis.Scale.Min = -A_Page.defaultCalibrationData.fullScale_gyro / 2;
             }
         }
 
@@ -184,8 +188,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton3.Checked)
             {
-                gyroPane.YAxis.Scale.Max = A_Page.fullScale_gyro;
-                gyroPane.YAxis.Scale.Min = -A_Page.fullScale_gyro;
+                gyroPane.YAxis.Scale.Max = A_Page.defaultCalibrationData.fullScale_gyro;
+                gyroPane.YAxis.Scale.Min = -A_Page.defaultCalibrationData.fullScale_gyro;
             }
         }
 
@@ -205,9 +209,9 @@ namespace NinjaScan_GUI
 
         private void buttonSetDrift_Click(object sender, EventArgs e)
         {
-            Form1.drift_gx += mean_x;
-            Form1.drift_gy += mean_y;
-            Form1.drift_gz += mean_z;
+            a_page.calibrationData.drift_gx += mean_x;
+            a_page.calibrationData.drift_gy += mean_y;
+            a_page.calibrationData.drift_gz += mean_z;
         }
 
 

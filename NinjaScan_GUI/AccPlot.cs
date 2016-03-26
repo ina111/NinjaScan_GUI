@@ -17,9 +17,12 @@ namespace NinjaScan_GUI
         int tickStart = 0;
         GraphPane gyroPane;
 
+        A_Page a_page;
 
-        public AccPlot()
+        public AccPlot(Form1 owner)
         {
+            a_page = owner.pages.a;
+
             InitializeComponent();
             gyroPane = zedGraphControl1.GraphPane;
             gyroPane.Title.IsVisible = false;
@@ -50,8 +53,8 @@ namespace NinjaScan_GUI
             gyroPane.XAxis.Scale.Max = (double)numericUpDown1.Value;
             gyroPane.XAxis.Scale.MinorStep = 0.5;
             gyroPane.XAxis.Scale.MajorStep = 1;
-            gyroPane.YAxis.Scale.Max = A_Page.fullScale_acc / 4;
-            gyroPane.YAxis.Scale.Min = -A_Page.fullScale_acc / 4;
+            gyroPane.YAxis.Scale.Max = A_Page.defaultCalibrationData.fullScale_acc / 4;
+            gyroPane.YAxis.Scale.Min = -A_Page.defaultCalibrationData.fullScale_acc / 4;
 
             // Scale the axes
             zedGraphControl1.AxisChange();
@@ -89,13 +92,13 @@ namespace NinjaScan_GUI
 
             // Time is measured in seconds
             //double time = (Environment.TickCount - tickStart) / 1000.0;
-            double time = Form1.gpstime / 1000.0;
+            double time = a_page.gps_time / 1000.0;
 
             // 3 seconds per cycle
             //list.Add(time, Math.Sin(2.0 * Math.PI * time / 3.0));
-            xlist.Add(time, Form1.ax);
-            ylist.Add(time, Form1.ay);
-            zlist.Add(time, Form1.az);
+            xlist.Add(time, a_page.cal_ax);
+            ylist.Add(time, a_page.cal_ay);
+            zlist.Add(time, a_page.cal_az);
 
             // Keep the X scale at a rolling 30 second interval, with one
             // major step between the max X value and the end of the axis
@@ -139,8 +142,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton1.Checked)
             {
-                gyroPane.YAxis.Scale.Max = A_Page.fullScale_acc / 4;
-                gyroPane.YAxis.Scale.Min = -A_Page.fullScale_acc / 4;
+                gyroPane.YAxis.Scale.Max = A_Page.defaultCalibrationData.fullScale_acc / 4;
+                gyroPane.YAxis.Scale.Min = -A_Page.defaultCalibrationData.fullScale_acc / 4;
             }
         }
 
@@ -148,8 +151,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton2.Checked)
             {
-                gyroPane.YAxis.Scale.Max = A_Page.fullScale_acc / 1;
-                gyroPane.YAxis.Scale.Min = -A_Page.fullScale_acc / 1;
+                gyroPane.YAxis.Scale.Max = A_Page.defaultCalibrationData.fullScale_acc / 1;
+                gyroPane.YAxis.Scale.Min = -A_Page.defaultCalibrationData.fullScale_acc / 1;
             }
         }
 
@@ -157,8 +160,8 @@ namespace NinjaScan_GUI
         {
             if (radioButton3.Checked)
             {
-                gyroPane.YAxis.Scale.Max = A_Page.fullScale_acc * 2;
-                gyroPane.YAxis.Scale.Min = -A_Page.fullScale_acc * 2;
+                gyroPane.YAxis.Scale.Max = A_Page.defaultCalibrationData.fullScale_acc * 2;
+                gyroPane.YAxis.Scale.Min = -A_Page.defaultCalibrationData.fullScale_acc * 2;
             }
         }
 

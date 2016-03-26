@@ -18,6 +18,8 @@ namespace NinjaScan_GUI
         Vector4 vec4 = new Vector4();
         float angle;
 
+        public AHRS.MadgwickAHRS ahrs;
+
         private void DrawCube()
         {
             GL.Begin(PrimitiveType.Polygon);
@@ -74,9 +76,11 @@ namespace NinjaScan_GUI
             GL.End();
         }
 
-        public Cube3D()
+        public Cube3D(Form1 owner)
             : base(600, 400, GraphicsMode.Default, "1-2:Camera")
         {
+            ahrs = owner.AHRS;
+
             VSync = VSyncMode.On;
 
             Keyboard.KeyUp += (sender, e) =>
@@ -97,10 +101,10 @@ namespace NinjaScan_GUI
                 Matrix4 modelview = Matrix4.LookAt(eyepoint, Vector3.UnitZ, Vector3.UnitY);
                 GL.LoadMatrix(ref modelview);
 
-                Quaternion q = new Quaternion(Form1.AHRS.Quaternion[1],
-                    Form1.AHRS.Quaternion[2],
-                    Form1.AHRS.Quaternion[3],
-                    Form1.AHRS.Quaternion[0]);
+                Quaternion q = new Quaternion(ahrs.Quaternion[1],
+                    ahrs.Quaternion[2],
+                    ahrs.Quaternion[3],
+                    ahrs.Quaternion[0]);
                 q.ToAxisAngle(out vec3, out angle);
                 GL.Rotate((float)(angle * 180 / Math.PI), vec3);
 

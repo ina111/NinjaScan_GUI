@@ -10,6 +10,9 @@ using System.Windows.Forms;
 using System.IO.Ports;
 using System.IO;
 using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
@@ -20,75 +23,75 @@ namespace NinjaScan_GUI
     public partial class Form1 : Form
     {
         // debug用
-        static System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+        System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 
-        SerialPort myPort;
-        Stream st;
+        CancellationTokenSource disconnectTokenSource = null;
+        CancellationTokenSource closeLogTokenSource = null;
+
         StreamWriter csv_A = new StreamWriter(Stream.Null);
         StreamWriter csv_P = new StreamWriter(Stream.Null);
         StreamWriter csv_M = new StreamWriter(Stream.Null);
         StreamWriter csv_G = new StreamWriter(Stream.Null);
         FileStream ubx_G = new FileStream("garbage.bin", FileMode.Append, FileAccess.Write);
 
-        public static AHRS.MadgwickAHRS AHRS = new AHRS.MadgwickAHRS(1f / 100f, 0.1f);
+        public AHRS.MadgwickAHRS AHRS = new AHRS.MadgwickAHRS(1f / 100f, 0.1f);
+        
+        public const uint defaultTcpPort = 28080;
 
+        private void updatePortList(){
+            comboBoxCOM.Items.Clear();
+            string[] serial_ports = SerialPort.GetPortNames();
+            string[] ports = new string[serial_ports.Length + 1];
+            Array.Copy(serial_ports, ports, serial_ports.Length);
+            ports[ports.Length - 1] = string.Format("TCP({0})", defaultTcpPort);
+            comboBoxCOM.Items.AddRange(ports);
+        }
 
-        public static double gpstime;
-        public static double ax, ay, az;
-        public static double gx, gy, gz;
-        public static double drift_gx, drift_gy, drift_gz;
-        public static double mx, my, mz;
-        public static double press, temp;
-        public static double latitude, longitude, altitude;
-
-                
         public Form1()
         {
             InitializeComponent();
-
-            comboBoxCOM.Items.AddRange(SerialPort.GetPortNames());
-
+            updatePortList();
         }
 
         private void butonGyro_Click(object sender, EventArgs e)
         {
-            GyroPlot gp = new GyroPlot();
+            GyroPlot gp = new GyroPlot(this);
             gp.Show();
         }
 
         private void buttonAcc_Click(object sender, EventArgs e)
         {
-            AccPlot ap = new AccPlot();
+            AccPlot ap = new AccPlot(this);
             ap.Show();
         }
 
         private void buttonMag_Click(object sender, EventArgs e)
         {
-            MagPlot mp = new MagPlot();
+            MagPlot mp = new MagPlot(this);
             mp.Show();
         }
 
         private void buttonPress_Click(object sender, EventArgs e)
         {
-            PressPlot pp = new PressPlot();
+            PressPlot pp = new PressPlot(this);
             pp.Show();
         }
 
         private void buttonAtti_Click(object sender, EventArgs e)
         {
-            AttiPlot atp = new AttiPlot();
+            AttiPlot atp = new AttiPlot(this);
             atp.Show();
         }
 
         private void buttonMap_Click(object sender, EventArgs e)
         {
-            GoogleEarth ge = new GoogleEarth();
+            GoogleEarth ge = new GoogleEarth(this);
             ge.Show();
         }
 
         private void button3DCube_Click(object sender, EventArgs e)
         {
-            using(Cube3D c3d = new Cube3D())
+            using(Cube3D c3d = new Cube3D(this))
             {
                 c3d.Run(30.0);
             }
@@ -103,34 +106,122 @@ namespace NinjaScan_GUI
         private void buttonCOMlist_Click(object sender, EventArgs e)
         {
             comboBoxCOM.SelectedItem = null;
-            comboBoxCOM.Items.Clear();
-            string[] ports = SerialPort.GetPortNames();
-            comboBoxCOM.Items.AddRange(ports);
+            updatePortList();
         }
 
         private void buttonConnect_Click(object sender, EventArgs e)
         {
-            if (buttonConnect.Text == "Connect")
+            if (disconnectTokenSource == null)
             {
                 try
                 {
-                    string PortName = comboBoxCOM.SelectedItem.ToString();
-                    myPort = new SerialPort(PortName, 115200, Parity.None, 8, StopBits.One);
-                    myPort.Open();
+                    string PortName = comboBoxCOM.Text;
+                    //MessageBox.Show(PortName);
+                    Match m = Regex.Match(PortName, @"TCP\((?:([^:]+):)?(\d+)\)");
 
-                    st = myPort.BaseStream;
-                    BufferedStream st_buffer = new BufferedStream(st);
-                    BinaryReader br = new BinaryReader(st_buffer);
+                    var tokenSource = new CancellationTokenSource();
+                    var token = tokenSource.Token;
+                    Task task = null;
+
+                    if (m.Success) // TCP
+                    {
+                        IPAddress addr = IPAddress.Any;
+
+                        if (m.Groups[1].Value != "")
+                        {
+                            try
+                            {
+                                addr = IPAddress.Parse(m.Groups[1].Value);
+                            }
+                            catch(FormatException)
+                            {
+                                addr = Dns.GetHostEntry(m.Groups[1].Value).AddressList[0];
+                            }
+                        }
+
+                        IPEndPoint endPoint = new IPEndPoint(addr, int.Parse(m.Groups[2].Value));
+                        TcpListener listener = new TcpListener(endPoint);
+
+                        MessageBox.Show(string.Format("Server({0}:{1}) ready.", 
+                            endPoint.Address.ToString(), endPoint.Port.ToString()));
+                        
+                        task = Task.Factory.StartNew(() =>
+                        {
+                            listener.Start();
+
+                            Task.Factory.StartNew(() =>
+                            {
+                                try
+                                {
+                                    int clients = 0;
+                                    while (true)
+                                    {
+                                    // ソケット接続待ち
+                                    
+                                        TcpClient client_new = listener.AcceptTcpClient();
+                                        if (++clients > 1) // 最大接続数チェック(1)
+                                        {
+                                            client_new.Close();
+                                            continue;
+                                        }
+
+                                        Task.Factory.StartNew(() =>
+                                        {
+                                            TcpClient client = client_new;
+                                            try
+                                            {
+                                                readPacket(new BufferedStream(client.GetStream()), token);
+                                            }
+                                            finally
+                                            {
+                                                if (client.Connected) client.Close();
+                                                clients--;
+                                            }
+                                        });
+                                    }
+                                }
+                                catch (SocketException) { }
+                            });
+
+                            while (true) token.ThrowIfCancellationRequested();                         
+                        }, token).ContinueWith(t =>
+                        {
+                            listener.Stop();
+                        });
+                    }
+                    else
+                    { // COM
+                        SerialPort port = new SerialPort(PortName, 115200, Parity.None, 8, StopBits.One);
+                        port.Open();
+
+                        // バックグラウンド処理
+                        task = Task.Factory.StartNew(() =>
+                        {
+                            readPacket(new BufferedStream(port.BaseStream), token);
+                        }, token).ContinueWith(t =>
+                        {
+                            port.Close();
+                        });
+                    }
+
+                    task.ContinueWith(t =>
+                    {
+                        disconnectTokenSource.Dispose();
+                        disconnectTokenSource = null;
+
+                        Invoke((MethodInvoker)(() => 
+                        {
+                            comboBoxCOM.Enabled = true;
+                            buttonCOMlist.Enabled = true;
+                            buttonConnect.Text = "Connect";
+                        }));
+                    });
 
                     comboBoxCOM.Enabled = false;
                     buttonCOMlist.Enabled = false;
                     buttonConnect.Text = "Disconnect";
 
-                    // バックグラウンド処理
-                    var task = Task.Factory.StartNew(() =>
-                        {
-                            Consol_Output(br);
-                        });
+                    disconnectTokenSource = tokenSource;
                 }
                 catch (IOException)
                 {
@@ -140,141 +231,170 @@ namespace NinjaScan_GUI
                 {
                     MessageBox.Show("The port is already opened other application.", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (NullReferenceException)
+                catch (ArgumentException)
                 {
-                    MessageBox.Show("you must select COM port", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("you must select appropriate port", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (Exception except)
-                { Console.WriteLine(except.ToString()); }
+                catch (Exception ex)
+                { 
+                    Console.WriteLine(ex.ToString()); 
+                }
             }
             else
             {
-                try
-                {
-                    myPort.Close();
-                }
-                catch { }
-                comboBoxCOM.Enabled = true;
-                buttonCOMlist.Enabled = true;
-                buttonConnect.Text = "Connect";
+                disconnectTokenSource.Cancel(true);
             }
         }
 
-        private void Consol_Output(BinaryReader br)
+        public class SylphidePages
         {
-            try
+            public A_Page a = new A_Page();
+            public P_Page p = new P_Page();
+            public M_Page m = new M_Page();
+            public G_Page g = new G_Page();
+        }
+        public SylphidePages pages = new SylphidePages();
+
+        private void readPacket(Stream st, CancellationToken token)
+        {
+            byte[] buf = new byte[0x40];
+            int offset = 0, buf_length = 0;
+
+            MemoryStream st_page = new MemoryStream(buf, 4, 32, false);
+            BinaryReader reader = new BinaryReader(st_page);
+
+            const int packet_length = 38;
+
+            bool read_next = true;
+            while (read_next)
             {
-                do
+                bool reading = true;
+                
+                if (offset > 0)
                 {
-                    // Sylphideプロトコルのheaderで頭出ししないと安定しない。log.datのときは必要ない
-                    if (br.ReadByte() == Sylphide_Protocol.header0 && br.ReadByte() == Sylphide_Protocol.header1)
+                    Array.Copy(buf, offset, buf, 0, buf_length -= offset);
+                }
+
+                st.BeginRead(buf, buf_length, packet_length - buf_length, result =>
+                {
+                    try
                     {
-                        br.ReadBytes(2); // sequence number, not necessary
-                        byte head = br.ReadByte();
-                        if (head == A_Page.header)
+                        int additional = st.EndRead(result);
+                        if (additional == 0) { read_next = false; }
+                        buf_length += additional;
+                    }
+                    catch (Exception ex)
+                    {
+                        if(ex is IOException || ex is ObjectDisposedException)
                         {
-                            A_Page.Read(br);
-                            Console.Write("[A page]:");
-                            Console.Write(A_Page.ax + "," + A_Page.ay + "," + A_Page.az + "," +
-                                A_Page.gx + "," + A_Page.gy + "," + A_Page.gz + "\n");
-
-                            gpstime = A_Page.gps_time;
-                            ax = A_Page.cal_ax;
-                            ay = A_Page.cal_ay;
-                            az = A_Page.cal_az;
-                            gx = A_Page.cal_gx;
-                            gy = A_Page.cal_gy;
-                            gz = A_Page.cal_gz;
-                            A_Page.drift_gx = drift_gx;
-                            A_Page.drift_gy = drift_gy;
-                            A_Page.drift_gz = drift_gz;
-                            AHRS.Update((float)gx / 180 * (float)Math.PI, (float)(gy / 180 * Math.PI), (float)(gz / 180 * Math.PI), (float)ax, (float)ay, (float)az);
-                            //AHRS.Update((float)gx, (float)gy, (float)gz, (float)ax, (float)ay, (float)az, (float)mx, (float)my, (float)mz);
-                            AHRS.Quaternion2Euler(AHRS.Quaternion);
-
+                            read_next = false;
                         }
-                        else if (head == P_Page.header)
+                        else
                         {
-                            P_Page.Read(br);
-                            Console.Write("[P page]:");
-                            Console.Write(P_Page.pressure * 0.01 + "(hPa)\n");
-
-                            press = P_Page.pressure;
-                            temp = P_Page.temperature;
-                        }
-                        else if (head == M_Page.header)
-                        {
-                            M_Page.Read(br);
-                            Console.Write("[M page]:");
-                            double conv = 0.1;
-                            Console.Write(M_Page.mx * conv + "," + M_Page.my * conv + "," + M_Page.mz * conv + "\n");
-
-                            mx = M_Page.cal_mx;
-                            my = M_Page.cal_my;
-                            mz = M_Page.cal_mz;
-                        }
-                        else if (head == G_Page.header)
-                        {
-                            G_Page.Read(br);
-                            Console.Write("[G page]:");
-                            Console.Write(G_Page.ubx + "\n");
-                            G_Page.SeekHead(G_Page.analysisObject);
-                        }
-
-                        // USBdumpボタンがONならファイル書き込みを行う。
-                        if (buttonUSBStop.Enabled == true)
-                        {
-                            writeFrombinTocsv(head, csv_A, csv_M, csv_P, csv_G, ubx_G);
+                            throw;
                         }
                     }
+                    reading = false;
+                }, null);
 
-                } while (true);
+                while (reading) token.ThrowIfCancellationRequested();
+                
+                if (buf_length < packet_length) { continue; }
+                
+                offset = 0;
+                if (buf[0] != Sylphide_Protocol.header0)
+                {
+                    offset = 1;
+                    continue;
+                }
+                if (buf[1] != Sylphide_Protocol.header1)
+                {
+                    offset = 2;
+                    continue;
+                }
+
+                // buf[2..3] sequence number, not necessary
+                // buf[36..37] cheksum, not necessary
+
+                st_page.Position = 0;
+                readOnePage(reader); // update by using page information
+
+                buf_length = 0;
             }
-            catch ( Exception e)
-            { Console.WriteLine(e.ToString());}
-            finally
+        }
+
+        private void readOnePage(BinaryReader br)
+        {            
+            byte head = br.ReadByte();
+            if (head == A_Page.header)
             {
-                csv_A.Close();
-                csv_M.Close();
-                csv_P.Close();
-                csv_G.Close();
-                ubx_G.Close();
+                pages.a.Update(br);
+                Console.Write("[A page]:");
+                Console.Write(
+                    pages.a.ax + "," + pages.a.ay + "," + pages.a.az + "," +
+                    pages.a.gx + "," + pages.a.gy + "," + pages.a.gz + "\n");
+                
+                AHRS.Update(
+                    (float)pages.a.cal_gx / 180 * (float)Math.PI,
+                    (float)pages.a.cal_gy / 180 * (float)Math.PI,
+                    (float)pages.a.cal_gz / 180 * (float)Math.PI,
+                    (float)pages.a.cal_ax, (float)pages.a.cal_ay, (float)pages.a.cal_az);
+                //AHRS.Update((float)gx, (float)gy, (float)gz, (float)ax, (float)ay, (float)az, (float)mx, (float)my, (float)mz);
+                AHRS.Quaternion2Euler(AHRS.Quaternion);
+            }
+            else if (head == P_Page.header)
+            {
+                pages.p.Update(br);
+                Console.Write("[P page]:");
+                Console.Write(pages.p.pressure * 0.01 + "(hPa)\n");
+            }
+            else if (head == M_Page.header)
+            {
+                pages.m.Update(br);
+                Console.Write("[M page]:");
+                double conv = 0.1;
+                Console.Write(pages.m.mx * conv + "," + pages.m.my * conv + "," + pages.m.mz * conv + "\n");
+            }
+            else if (head == G_Page.header)
+            {
+                pages.g.Update(br);
+                Console.Write("[G page]:");
+                Console.Write(pages.g.ubx_raw + "\n");
+            }
+
+            // ファイルが開いているなら書き込みを行う。
+            if (closeLogTokenSource != null)
+            {
+                writeFrombinTocsv(head, csv_A, csv_M, csv_P, csv_G, ubx_G);
             }
         }
 
         private void writeFrombinTocsv(byte head, StreamWriter asw, StreamWriter msw, StreamWriter psw, StreamWriter gsw, FileStream gfs)
         {
-            try
+            if (head == A_Page.header)
             {
-                if (head == A_Page.header)
-                {
-                    asw.WriteLine(gpstime.ToString() + ","
-                        + ax.ToString() + "," + ay.ToString() + "," + az.ToString() + ","
-                        + gx.ToString() + "," + gy.ToString() + "," + gz.ToString());
-                }
-                else if (head == M_Page.header)
-                {
-                    msw.WriteLine(gpstime.ToString() + ","
-                        + mx.ToString() + "," + my.ToString() + "," + mz.ToString());
-                }
-                else if (head == P_Page.header)
-                {
-                    psw.WriteLine(gpstime.ToString() + ","
-                        + press.ToString() + "," + temp.ToString());
-                }
-                else if (head == G_Page.header)
-                {
-                    gfs.Write(G_Page.ubx, 0, G_Page.ubx.Length);
-                    if (G_Page.isOutput == true)
-                    {
-                        gsw.WriteLine(UBX.NMEA_GPGGA);
-                        gsw.WriteLine(UBX.NMEA_GPZDA);
-                    }
-                }
+                asw.WriteLine(pages.a.gps_time.ToString() + ","
+                    + pages.a.cal_ax.ToString() + "," + pages.a.cal_ay.ToString() + "," + pages.a.cal_az.ToString() + ","
+                    + pages.a.cal_gx.ToString() + "," + pages.a.cal_gy.ToString() + "," + pages.a.cal_gz.ToString());
             }
-            catch (Exception e)
+            else if (head == M_Page.header)
             {
-                Console.WriteLine(e.ToString());
+                msw.WriteLine(pages.m.gps_time.ToString() + ","
+                    + pages.m.cal_mx.ToString() + "," + pages.m.cal_my.ToString() + "," + pages.m.cal_mz.ToString());
+            }
+            else if (head == P_Page.header)
+            {
+                psw.WriteLine(pages.p.gps_time.ToString() + ","
+                    + pages.p.pressure.ToString() + "," + pages.p.temperature.ToString());
+            }
+            else if (head == G_Page.header)
+            {
+                gfs.Write(pages.g.ubx_raw, 0, pages.g.ubx_raw.Length);
+                if (pages.g.hasOutput == true)
+                {
+                    gsw.WriteLine(pages.g.ubx.nmea.gpgga);
+                    gsw.WriteLine(pages.g.ubx.nmea.gpzda);
+                }
             }
         }
 
@@ -289,7 +409,7 @@ namespace NinjaScan_GUI
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.FileName = "LOG.DAT";
             //ofd.InitialDirectory = @"Environment.SpecialFolder.Desktop";
-            ofd.Filter = "Sylphide binary file|LOG.DAT";
+            ofd.Filter = "Sylphide binary file|LOG.DAT|All files (*.*)|*.*";
             ofd.FilterIndex = 1;
             ofd.Title = "Select LOG.DAT";
             if (ofd.ShowDialog() == DialogResult.OK)
@@ -350,7 +470,6 @@ namespace NinjaScan_GUI
             string input_file = textBox3.Text;
             string output_folder = textBox1.Text;
             string file_name = textBox4.Text;
-            DialogResult result_overwrite;
 
             string A_file = output_folder + "\\" + file_name + "_A.csv";
             string P_file = output_folder + "\\" + file_name + "_P.csv";
@@ -362,12 +481,12 @@ namespace NinjaScan_GUI
             if (File.Exists(A_file) || File.Exists(P_file) ||
                 File.Exists(M_file) || File.Exists(G_file) || File.Exists(UBX_file))
             {
-                result_overwrite = MessageBox.Show("Are you sure you want to overwrite the files?",
+                DialogResult res = MessageBox.Show("Are you sure you want to overwrite the files?",
                     "Overwrite save",
                     MessageBoxButtons.OKCancel,
                     MessageBoxIcon.Exclamation);
 
-                if (result_overwrite == DialogResult.Cancel)
+                if (res == DialogResult.Cancel)
                 {
                     MessageBox.Show("Abort overwrite save", "Information",
                         MessageBoxButtons.OK,
@@ -376,89 +495,84 @@ namespace NinjaScan_GUI
                 }
             }
 
-            StreamWriter csv_A = new StreamWriter(A_file, false);
-            StreamWriter csv_P = new StreamWriter(P_file, false);
-            StreamWriter csv_M = new StreamWriter(M_file, false);
-            StreamWriter csv_G = new StreamWriter(G_file, false);
-            BinaryWriter ubx_G = new BinaryWriter(File.OpenWrite(UBX_file));
+            StreamWriter csv_A_sd = new StreamWriter(A_file, false);
+            StreamWriter csv_P_sd = new StreamWriter(P_file, false);
+            StreamWriter csv_M_sd = new StreamWriter(M_file, false);
+            StreamWriter csv_G_sd = new StreamWriter(G_file, false);
+            BinaryWriter ubx_G_sd = new BinaryWriter(File.OpenWrite(UBX_file));
 
-            csv_A.WriteLine("#gpstime,acc_xa(g),acc_y(g),acc_z(g),gyro_x(dps),gyro_y(dps),gyro_z(dps)");
-            csv_M.WriteLine("#gpstime,mag_x(uT),mag_y(uT),mag_z(uT)");
-            csv_P.WriteLine("#gpstime,press(Pa),temp(deg)");
+            csv_A_sd.WriteLine("#gpstime,acc_xa(g),acc_y(g),acc_z(g),gyro_x(dps),gyro_y(dps),gyro_z(dps)");
+            csv_M_sd.WriteLine("#gpstime,mag_x(uT),mag_y(uT),mag_z(uT)");
+            csv_P_sd.WriteLine("#gpstime,press(Pa),temp(deg)");
 
-            buttonSDConvert.Enabled = false;
-
-            using (BinaryReader br = new BinaryReader(File.OpenRead(input_file)))
+            Task.Factory.StartNew(() =>
             {
-                try
+                BinaryReader br = new BinaryReader(File.OpenRead(input_file));
+
+                SylphidePages pages_sd = new SylphidePages();
+
+                do
                 {
-                    do
+                    // LOG.DATの場合はProtocolのheaderの頭出しは必要ない
+                    byte head = br.ReadByte();
+                    if (head == A_Page.header)
                     {
-                        // LOG.DATの場合はProtocolのheaderの頭出しは必要ない
-                        byte head = br.ReadByte();
-                        if (head == A_Page.header)
+                        pages_sd.a.Update(br);
+                        csv_A_sd.WriteLine(pages_sd.a.gps_time + "," +
+                            pages_sd.a.cal_ax + "," + pages_sd.a.cal_ay + "," + pages_sd.a.cal_az + "," +
+                            pages_sd.a.cal_gx + "," + pages_sd.a.cal_gy + "," + pages_sd.a.cal_gz);
+                    }
+                    else if (head == P_Page.header)
+                    {
+                        pages_sd.p.Update(br);
+                        csv_P_sd.WriteLine(pages_sd.p.gps_time + "," +
+                            pages_sd.p.pressure + "," + (double)pages_sd.p.temperature * 0.01);
+                    }
+                    else if (head == M_Page.header)
+                    {
+                        pages_sd.m.Update(br);
+                        csv_M_sd.WriteLine(pages_sd.m.gps_time + "," +
+                            pages_sd.m.cal_mx + "," + pages_sd.m.cal_my + "," + pages_sd.m.cal_mz);
+                    }
+                    else if (head == G_Page.header)
+                    {
+                        pages_sd.g.Update(br);
+                        ubx_G_sd.Write(pages_sd.g.ubx_raw); // GPS pageだけubx形式
+                        if (pages_sd.g.hasOutput == true)
                         {
-                            A_Page.Read(br);
-                            //csv_A.WriteLine(A_Page..gps_time + "," +
-                            //    A_Page..ax + "," + A_Page..ay + "," + A_Page..az + "," +
-                            //    A_Page..gx + "," + A_Page..gy + "," + A_Page.gz);
-                            csv_A.WriteLine(A_Page.gps_time + "," +
-                                A_Page.cal_ax + "," + A_Page.cal_ay + "," + A_Page.cal_az + "," + 
-                                A_Page.cal_gx + "," + A_Page.cal_gy + "," + A_Page.cal_gz);
-                        }
-                        else if (head == P_Page.header)
-                        {
-                            P_Page.Read(br);
-                            //csv_P.WriteLine(P_Page.gps_time + "," +
-                            //    P_Page.pressure + "," + P_Page.temperature);
-                            csv_P.WriteLine(P_Page.gps_time + "," +
-                                P_Page.pressure + "," + (double)P_Page.temperature * 0.01);
-                        }
-                        else if (head == M_Page.header)
-                        {
-                            M_Page.Read(br);
-                            //csv_M.WriteLine(M_Page.gps_time + "," +
-                            //    M_Page.mx + "," + M_Page.my + "," + M_Page.mz);
-                            csv_M.WriteLine(M_Page.gps_time + "," +
-                                M_Page.cal_mx + "," + M_Page.cal_my + "," + M_Page.cal_mz);
-                        }
-                        else if (head == G_Page.header)
-                        {
-                            G_Page.Read(br);
-                            ubx_G.Write(G_Page.ubx); // GPS pageだけubx形式
-                            G_Page.SeekHead(G_Page.analysisObject);
-                            if (G_Page.isOutput == true)
+                            csv_G_sd.WriteLine(pages_sd.g.ubx.nmea.gpgga);
+                            if (pages_sd.g.ubx.nmea.time.Second == 0 && pages_sd.g.ubx.nmea.time.Millisecond == 0)
                             {
-                                csv_G.WriteLine(UBX.NMEA_GPGGA);
-                                if (UBX.time.Second == 0 && UBX.time.Millisecond == 0)
-                                {
-                                    csv_G.WriteLine(UBX.NMEA_GPZDA);
-                                }
+                                csv_G_sd.WriteLine(pages_sd.g.ubx.nmea.gpzda);
                             }
                         }
-                    } while (true);
-                }
-                catch
-                { }
-                finally
-                {
-                    csv_A.Close();
-                    csv_P.Close();
-                    csv_M.Close();
-                    csv_G.Close();
-                    ubx_G.Close();
-                }
-            }
+                    }
+                } while (true);
+            }).ContinueWith(t =>
+            {
+                csv_A_sd.Close();
+                csv_P_sd.Close();
+                csv_M_sd.Close();
+                csv_G_sd.Close();
+                ubx_G_sd.Close();
 
-            buttonSDConvert.Enabled = true;
-            DialogResult result = MessageBox.Show("Complete to output CSV files");
+                DialogResult result = MessageBox.Show("Complete to output CSV files");
+
+                Invoke((MethodInvoker)(() =>
+                {
+                    buttonSDConvert.Text = "Convert";
+                    buttonSDConvert.Enabled = true;
+                }));
+            });
+
+            buttonSDConvert.Enabled = false;
+            buttonSDConvert.Text = "Converting...";
         }
 
         private void buttonUSBStart_Click(object sender, EventArgs e)
         {
             string output_folder = textBox2.Text;
             string file_name = textBox5.Text;
-            DialogResult result_overwrite;
 
             string A_file = output_folder + "\\" + file_name + "_A.csv";
             string P_file = output_folder + "\\" + file_name + "_P.csv";
@@ -470,12 +584,12 @@ namespace NinjaScan_GUI
             if (File.Exists(A_file) || File.Exists(P_file) ||
                 File.Exists(M_file) || File.Exists(G_file) || File.Exists(UBX_file))
             {
-                result_overwrite = MessageBox.Show("Are you sure you want to overwrite the files?",
+                DialogResult res = MessageBox.Show("Are you sure you want to overwrite the files?",
                     "Overwrite save",
                     MessageBoxButtons.OKCancel,
                     MessageBoxIcon.Exclamation);
 
-                if (result_overwrite == DialogResult.Cancel)
+                if (res == DialogResult.Cancel)
                 {
                     MessageBox.Show("Abort overwrite save", "Information",
                         MessageBoxButtons.OK,
@@ -484,22 +598,28 @@ namespace NinjaScan_GUI
                 }
             }
 
-            // COMポートが接続されていなかったらabort
-            if (myPort == null || myPort.IsOpen == false)
+            // COMポートが接続されていなかったら警告を出す
+            if (disconnectTokenSource == null)
             {
-                MessageBox.Show("COM Port is NOT open.", "error",
+                DialogResult res = MessageBox.Show("Port has NOT been opened yet. Continue?", "Port check",
+                        MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Exclamation);
+                if (res == DialogResult.Cancel)
+                {
+                    MessageBox.Show("Aborted", "Information",
                         MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                return;
+                        MessageBoxIcon.Information);
+                    return;
+                }
             }
 
-            if (buttonConnect.Text == "Disconnect")
-            {
-                buttonUSBStart.Enabled = false;
-                buttonUSBStop.Enabled = true;
-                textBox5.Enabled = false;
-                buttonUSBBrowse.Enabled = false;
+            var tokenSource = new CancellationTokenSource();
+            var token = tokenSource.Token;
+            Task task = null;
 
+            // バックグラウンド処理
+            task = Task.Factory.StartNew(() =>
+            {
                 File.WriteAllText(A_file, "#gpstime,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z\n");
                 File.WriteAllText(M_file, "#gpstime,mag_x,mag_y,mag_z\n");
                 File.WriteAllText(P_file, "#gpstime,press,temp\n");
@@ -509,26 +629,43 @@ namespace NinjaScan_GUI
                 csv_P = new StreamWriter(P_file, true);
                 csv_G = new StreamWriter(G_file, true);
                 ubx_G = new FileStream(UBX_file, FileMode.Append, FileAccess.Write);
-            }
+
+                while (true)
+                {
+                    token.ThrowIfCancellationRequested();
+                }
+            }, token).ContinueWith(t =>
+            {
+                csv_A.Close();
+                csv_M.Close();
+                csv_P.Close();
+                csv_G.Close();
+                ubx_G.Close();
+            }).ContinueWith(t =>
+            {
+                closeLogTokenSource.Dispose();
+                closeLogTokenSource = null;
+
+                Invoke((MethodInvoker)(() =>
+                {
+                    buttonUSBBrowse.Enabled = true;
+                    buttonUSBStart.Enabled = true;
+                    textBox5.Enabled = true;
+                    buttonUSBStop.Enabled = false;
+                }));
+            });
+
+            buttonUSBStart.Enabled = false;
+            buttonUSBStop.Enabled = true;
+            textBox5.Enabled = false;
+            buttonUSBBrowse.Enabled = false;
+
+            closeLogTokenSource = tokenSource;
         }
 
         private void buttonUSBStop_Click(object sender, EventArgs e)
         {
-            textBox5.Enabled = true;
-            buttonUSBBrowse.Enabled = true;
-            buttonUSBStart.Enabled = true;
-            buttonUSBStop.Enabled = false;
-
-            csv_A.Close();
-            csv_M.Close();
-            csv_P.Close();
-            csv_G.Close();
-            ubx_G.Close();
+            closeLogTokenSource.Cancel(true);
         }
-
-
-
-
-
     }
 }

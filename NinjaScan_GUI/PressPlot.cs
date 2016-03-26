@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ZedGraph;
+using NinjaScan;
 
 namespace NinjaScan_GUI
 {
@@ -16,9 +17,12 @@ namespace NinjaScan_GUI
         int tickStart = 0;
         GraphPane PressPane;
 
+        P_Page p_page;
 
-        public PressPlot()
+        public PressPlot(Form1 owner)
         {
+            p_page = owner.pages.p;
+
             InitializeComponent();
             PressPane = zedGraphControl1.GraphPane;
             PressPane.Title.IsVisible = false;
@@ -96,12 +100,12 @@ namespace NinjaScan_GUI
 
             // Time is measured in seconds
             //double time = (Environment.TickCount - tickStart) / 1000.0;
-            double time = Form1.gpstime / 1000.0;
+            double time = p_page.gps_time / 1000.0;
 
             // 3 seconds per cycle
             //list.Add(time, Math.Sin(2.0 * Math.PI * time / 3.0));
-            xlist.Add(time, Form1.press);
-            ylist.Add(time, Form1.temp / 100);
+            xlist.Add(time, p_page.pressure);
+            ylist.Add(time, p_page.temperature / 100);
 
             // Keep the X scale at a rolling 30 second interval, with one
             // major step between the max X value and the end of the axis
