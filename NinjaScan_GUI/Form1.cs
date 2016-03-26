@@ -23,7 +23,7 @@ namespace NinjaScan_GUI
     public partial class Form1 : Form
     {
         // debug用
-        static System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+        System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 
         CancellationTokenSource disconnectTokenSource = null;
         CancellationTokenSource closeLogTokenSource = null;
@@ -43,7 +43,7 @@ namespace NinjaScan_GUI
             string[] serial_ports = SerialPort.GetPortNames();
             string[] ports = new string[serial_ports.Length + 1];
             Array.Copy(serial_ports, ports, serial_ports.Length);
-            ports[ports.Length - 1] = string.Format("TCP({0}:{1})", Dns.GetHostEntry(Dns.GetHostName()).AddressList[0], defaultTcpPort);
+            ports[ports.Length - 1] = string.Format("TCP({0})", defaultTcpPort);
             comboBoxCOM.Items.AddRange(ports);
         }
 
@@ -117,7 +117,7 @@ namespace NinjaScan_GUI
                 {
                     string PortName = comboBoxCOM.Text;
                     //MessageBox.Show(PortName);
-                    Match m = Regex.Match(PortName, @"TCP\(((?:\d+\.){3}\d+):(\d+)\)");
+                    Match m = Regex.Match(PortName, @"TCP\((?:([^:]+):)?(\d+)\)");
 
                     var tokenSource = new CancellationTokenSource();
                     var token = tokenSource.Token;
@@ -125,8 +125,69 @@ namespace NinjaScan_GUI
 
                     if (m.Success) // TCP
                     {
-                        //MessageBox.Show(string.Format("TCP({0}:{1})", m.Groups[1].Value, m.Groups[2].Value));
-                        throw new NullReferenceException();
+                        IPAddress addr = IPAddress.Any;
+
+                        if (m.Groups[1].Value != "")
+                        {
+                            try
+                            {
+                                addr = IPAddress.Parse(m.Groups[1].Value);
+                            }
+                            catch(FormatException)
+                            {
+                                addr = Dns.GetHostEntry(m.Groups[1].Value).AddressList[0];
+                            }
+                        }
+
+                        IPEndPoint endPoint = new IPEndPoint(addr, int.Parse(m.Groups[2].Value));
+                        TcpListener listener = new TcpListener(endPoint);
+
+                        MessageBox.Show(string.Format("Server({0}:{1}) ready.", 
+                            endPoint.Address.ToString(), endPoint.Port.ToString()));
+                        
+                        task = Task.Factory.StartNew(() =>
+                        {
+                            listener.Start();
+
+                            Task.Factory.StartNew(() =>
+                            {
+                                try
+                                {
+                                    int clients = 0;
+                                    while (true)
+                                    {
+                                    // ソケット接続待ち
+                                    
+                                        TcpClient client_new = listener.AcceptTcpClient();
+                                        if (++clients > 1) // 最大接続数チェック(1)
+                                        {
+                                            client_new.Close();
+                                            continue;
+                                        }
+
+                                        Task.Factory.StartNew(() =>
+                                        {
+                                            TcpClient client = client_new;
+                                            try
+                                            {
+                                                readPacket(new BufferedStream(client.GetStream()), token);
+                                            }
+                                            finally
+                                            {
+                                                if (client.Connected) client.Close();
+                                                clients--;
+                                            }
+                                        });
+                                    }
+                                }
+                                catch (SocketException) { }
+                            });
+
+                            while (true) token.ThrowIfCancellationRequested();                         
+                        }, token).ContinueWith(t =>
+                        {
+                            listener.Stop();
+                        });
                     }
                     else
                     { // COM
@@ -148,9 +209,12 @@ namespace NinjaScan_GUI
                         disconnectTokenSource.Dispose();
                         disconnectTokenSource = null;
 
-                        comboBoxCOM.Enabled = true;
-                        buttonCOMlist.Enabled = true;
-                        buttonConnect.Text = "Connect";
+                        Invoke((MethodInvoker)(() => 
+                        {
+                            comboBoxCOM.Enabled = true;
+                            buttonCOMlist.Enabled = true;
+                            buttonConnect.Text = "Connect";
+                        }));
                     });
 
                     comboBoxCOM.Enabled = false;
@@ -171,8 +235,10 @@ namespace NinjaScan_GUI
                 {
                     MessageBox.Show("you must select appropriate port", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (Exception except)
-                { MessageBox.Show(except.ToString());  Console.WriteLine(except.ToString()); }
+                catch (Exception ex)
+                { 
+                    Console.WriteLine(ex.ToString()); 
+                }
             }
             else
             {
@@ -213,11 +279,20 @@ namespace NinjaScan_GUI
                 {
                     try
                     {
-                        buf_length += st.EndRead(result);
+                        int additional = st.EndRead(result);
+                        if (additional == 0) { read_next = false; }
+                        buf_length += additional;
                     }
-                    catch (IOException)
+                    catch (Exception ex)
                     {
-                        read_next = false;
+                        if(ex is IOException || ex is ObjectDisposedException)
+                        {
+                            read_next = false;
+                        }
+                        else
+                        {
+                            throw;
+                        }
                     }
                     reading = false;
                 }, null);
@@ -436,8 +511,6 @@ namespace NinjaScan_GUI
 
                 SylphidePages pages_sd = new SylphidePages();
 
-                buttonSDConvert.Text = "Converting...";
-
                 do
                 {
                     // LOG.DATの場合はProtocolのheaderの頭出しは必要ない
@@ -485,11 +558,15 @@ namespace NinjaScan_GUI
 
                 DialogResult result = MessageBox.Show("Complete to output CSV files");
 
-                buttonSDConvert.Text = "Convert";
-                buttonSDConvert.Enabled = true;
+                Invoke((MethodInvoker)(() =>
+                {
+                    buttonSDConvert.Text = "Convert";
+                    buttonSDConvert.Enabled = true;
+                }));
             });
 
             buttonSDConvert.Enabled = false;
+            buttonSDConvert.Text = "Converting...";
         }
 
         private void buttonUSBStart_Click(object sender, EventArgs e)
@@ -568,11 +645,14 @@ namespace NinjaScan_GUI
             {
                 closeLogTokenSource.Dispose();
                 closeLogTokenSource = null;
-                
-                buttonUSBBrowse.Enabled = true;
-                buttonUSBStart.Enabled = true;
-                textBox5.Enabled = true;
-                buttonUSBStop.Enabled = false;
+
+                Invoke((MethodInvoker)(() =>
+                {
+                    buttonUSBBrowse.Enabled = true;
+                    buttonUSBStart.Enabled = true;
+                    textBox5.Enabled = true;
+                    buttonUSBStop.Enabled = false;
+                }));
             });
 
             buttonUSBStart.Enabled = false;

@@ -69,9 +69,9 @@
             // comboBoxCOM
             // 
             this.comboBoxCOM.FormattingEnabled = true;
-            this.comboBoxCOM.Location = new System.Drawing.Point(88, 23);
+            this.comboBoxCOM.Location = new System.Drawing.Point(48, 23);
             this.comboBoxCOM.Name = "comboBoxCOM";
-            this.comboBoxCOM.Size = new System.Drawing.Size(113, 20);
+            this.comboBoxCOM.Size = new System.Drawing.Size(169, 20);
             this.comboBoxCOM.TabIndex = 0;
             this.comboBoxCOM.SelectedIndexChanged += new System.EventHandler(this.comboBoxCOM_SelectedIndexChanged);
             // 
@@ -150,9 +150,9 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(6, 27);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(65, 12);
+            this.label2.Size = new System.Drawing.Size(36, 12);
             this.label2.TabIndex = 9;
-            this.label2.Text = "COM Port #";
+            this.label2.Text = "Port #";
             // 
             // textBox1
             // 
