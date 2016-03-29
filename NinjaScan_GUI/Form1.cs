@@ -252,6 +252,35 @@ namespace NinjaScan_GUI
             public P_Page p = new P_Page();
             public M_Page m = new M_Page();
             public G_Page g = new G_Page();
+
+            public void DumpA(StreamWriter w)
+            {
+                w.WriteLine(a.gps_time.ToString() + ","
+                    + a.cal_ax.ToString() + "," + a.cal_ay.ToString() + "," + a.cal_az.ToString() + ","
+                    + a.cal_gx.ToString() + "," + a.cal_gy.ToString() + "," + a.cal_gz.ToString());
+            }
+            
+            public void DumpM(StreamWriter w)
+            {
+                w.WriteLine(m.gps_time.ToString() + ","
+                    + m.cal_mx.ToString() + "," + m.cal_my.ToString() + "," + m.cal_mz.ToString());
+            }
+
+            public void DumpP(StreamWriter w)
+            {
+                w.WriteLine(p.gps_time.ToString() + ","
+                    + p.pressure.ToString() + "," + ((double)p.temperature * 0.01).ToString());
+            }
+
+            public void DumpG(StreamWriter w_nmea, Stream w_ubx)
+            {
+                w_ubx.Write(g.ubx_raw, 0, g.ubx_raw.Length);
+                if (g.hasOutput == true)
+                {
+                    w_nmea.WriteLine(g.ubx.nmea.gpgga);
+                    w_nmea.WriteLine(g.ubx.nmea.gpzda);
+                }
+            }
         }
         public SylphidePages pages = new SylphidePages();
 
@@ -373,28 +402,19 @@ namespace NinjaScan_GUI
         {
             if (head == A_Page.header)
             {
-                asw.WriteLine(pages.a.gps_time.ToString() + ","
-                    + pages.a.cal_ax.ToString() + "," + pages.a.cal_ay.ToString() + "," + pages.a.cal_az.ToString() + ","
-                    + pages.a.cal_gx.ToString() + "," + pages.a.cal_gy.ToString() + "," + pages.a.cal_gz.ToString());
+                pages.DumpA(asw);
             }
             else if (head == M_Page.header)
             {
-                msw.WriteLine(pages.m.gps_time.ToString() + ","
-                    + pages.m.cal_mx.ToString() + "," + pages.m.cal_my.ToString() + "," + pages.m.cal_mz.ToString());
+                pages.DumpM(msw);
             }
             else if (head == P_Page.header)
             {
-                psw.WriteLine(pages.p.gps_time.ToString() + ","
-                    + pages.p.pressure.ToString() + "," + pages.p.temperature.ToString());
+                pages.DumpP(psw);
             }
             else if (head == G_Page.header)
             {
-                gfs.Write(pages.g.ubx_raw, 0, pages.g.ubx_raw.Length);
-                if (pages.g.hasOutput == true)
-                {
-                    gsw.WriteLine(pages.g.ubx.nmea.gpgga);
-                    gsw.WriteLine(pages.g.ubx.nmea.gpzda);
-                }
+                pages.DumpG(gsw, gfs);
             }
         }
 
@@ -518,34 +538,22 @@ namespace NinjaScan_GUI
                     if (head == A_Page.header)
                     {
                         pages_sd.a.Update(br);
-                        csv_A_sd.WriteLine(pages_sd.a.gps_time + "," +
-                            pages_sd.a.cal_ax + "," + pages_sd.a.cal_ay + "," + pages_sd.a.cal_az + "," +
-                            pages_sd.a.cal_gx + "," + pages_sd.a.cal_gy + "," + pages_sd.a.cal_gz);
+                        pages.DumpA(csv_A_sd);
                     }
                     else if (head == P_Page.header)
                     {
                         pages_sd.p.Update(br);
-                        csv_P_sd.WriteLine(pages_sd.p.gps_time + "," +
-                            pages_sd.p.pressure + "," + (double)pages_sd.p.temperature * 0.01);
+                        pages.DumpP(csv_P_sd);
                     }
                     else if (head == M_Page.header)
                     {
                         pages_sd.m.Update(br);
-                        csv_M_sd.WriteLine(pages_sd.m.gps_time + "," +
-                            pages_sd.m.cal_mx + "," + pages_sd.m.cal_my + "," + pages_sd.m.cal_mz);
+                        pages.DumpM(csv_M_sd);
                     }
                     else if (head == G_Page.header)
                     {
                         pages_sd.g.Update(br);
-                        ubx_G_sd.Write(pages_sd.g.ubx_raw); // GPS pageだけubx形式
-                        if (pages_sd.g.hasOutput == true)
-                        {
-                            csv_G_sd.WriteLine(pages_sd.g.ubx.nmea.gpgga);
-                            if (pages_sd.g.ubx.nmea.time.Second == 0 && pages_sd.g.ubx.nmea.time.Millisecond == 0)
-                            {
-                                csv_G_sd.WriteLine(pages_sd.g.ubx.nmea.gpzda);
-                            }
-                        }
+                        pages.DumpG(csv_G_sd, ubx_G_sd.BaseStream);
                     }
                 } while (true);
             }).ContinueWith(t =>
