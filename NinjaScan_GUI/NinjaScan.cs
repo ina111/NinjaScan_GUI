@@ -393,7 +393,7 @@ namespace NinjaScan
 
         public void Update(BinaryReader input)
         {
-            ubx_raw = input.ReadBytes(ubx_raw.Length);
+            int length = input.BaseStream.Read(ubx_raw, 0, ubx_raw.Length);
 
             if (ubx_buf.Length < ubx_buf_length + ubx_raw.Length) // 溢れ防止
             {
@@ -402,17 +402,9 @@ namespace NinjaScan
                 ubx_index_header0 = -1;
             }
 
-            Array.Copy(ubx_raw, 0, ubx_buf, ubx_buf_length, ubx_raw.Length); //31バイトをbuffにコピー,object_offsetがあれば、その分オフセット
-            ubx_buf_length += 31;
-
-            try
-            {
-                Parse();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-            }
+            Array.Copy(ubx_raw, 0, ubx_buf, ubx_buf_length, length); //31バイトをbuffにコピー,object_offsetがあれば、その分オフセット
+            ubx_buf_length += length;
+            Parse();
         }
 
         /// <summary>
