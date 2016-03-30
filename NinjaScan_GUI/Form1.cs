@@ -25,14 +25,21 @@ namespace NinjaScan_GUI
         // debug用
         System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 
+        bool closing = false;
+
+        Task connectingTask = null;
         CancellationTokenSource disconnectTokenSource = null;
+        Task loggingTask = null;
         CancellationTokenSource closeLogTokenSource = null;
+        Task convertingTask = null;
+        CancellationTokenSource cancelConvertTokenSource = null;
 
         StreamWriter csv_A = new StreamWriter(Stream.Null);
         StreamWriter csv_P = new StreamWriter(Stream.Null);
         StreamWriter csv_M = new StreamWriter(Stream.Null);
-        StreamWriter csv_G = new StreamWriter(Stream.Null);
-        FileStream ubx_G = new FileStream("garbage.bin", FileMode.Append, FileAccess.Write);
+        StreamWriter nmea_G = new StreamWriter(Stream.Null);
+        BinaryWriter ubx_G = new BinaryWriter(Stream.Null);
+        Object fileSemaphore = new Object();
 
         public AHRS.MadgwickAHRS AHRS = new AHRS.MadgwickAHRS(1f / 100f, 0.1f);
         
@@ -121,7 +128,6 @@ namespace NinjaScan_GUI
 
                     var tokenSource = new CancellationTokenSource();
                     var token = tokenSource.Token;
-                    Task task = null;
 
                     if (m.Success) // TCP
                     {
@@ -145,7 +151,7 @@ namespace NinjaScan_GUI
                         MessageBox.Show(string.Format("Server({0}:{1}) ready.", 
                             endPoint.Address.ToString(), endPoint.Port.ToString()));
                         
-                        task = Task.Factory.StartNew(() =>
+                        connectingTask = Task.Factory.StartNew(() =>
                         {
                             listener.Start();
 
@@ -195,7 +201,7 @@ namespace NinjaScan_GUI
                         port.Open();
 
                         // バックグラウンド処理
-                        task = Task.Factory.StartNew(() =>
+                        connectingTask = Task.Factory.StartNew(() =>
                         {
                             readPacket(new BufferedStream(port.BaseStream), token);
                         }, token).ContinueWith(t =>
@@ -204,11 +210,13 @@ namespace NinjaScan_GUI
                         });
                     }
 
-                    task.ContinueWith(t =>
+                    connectingTask.ContinueWith(t =>
                     {
                         disconnectTokenSource.Dispose();
                         disconnectTokenSource = null;
+                        connectingTask = null;
 
+                        if (closing) { return; }
                         Invoke((MethodInvoker)(() => 
                         {
                             comboBoxCOM.Enabled = true;
@@ -252,6 +260,47 @@ namespace NinjaScan_GUI
             public P_Page p = new P_Page();
             public M_Page m = new M_Page();
             public G_Page g = new G_Page();
+
+            public void DumpA(StreamWriter w)
+            {
+                w.WriteLine(a.gps_time.ToString() + ","
+                    + a.cal_ax.ToString() + "," + a.cal_ay.ToString() + "," + a.cal_az.ToString() + ","
+                    + a.cal_gx.ToString() + "," + a.cal_gy.ToString() + "," + a.cal_gz.ToString());
+            }
+            static public void WriteCSVHeaderA(StreamWriter w)
+            {
+                w.WriteLine("#gpstime,acc_xa(g),acc_y(g),acc_z(g),gyro_x(dps),gyro_y(dps),gyro_z(dps)");
+            }
+            
+            public void DumpM(StreamWriter w)
+            {
+                w.WriteLine(m.gps_time.ToString() + ","
+                    + m.cal_mx.ToString() + "," + m.cal_my.ToString() + "," + m.cal_mz.ToString());
+            }
+            static public void WriteCSVHeaderM(StreamWriter w)
+            {
+                w.WriteLine("#gpstime,mag_x(uT),mag_y(uT),mag_z(uT)");
+            }
+
+            public void DumpP(StreamWriter w)
+            {
+                w.WriteLine(p.gps_time.ToString() + ","
+                    + p.pressure.ToString() + "," + ((double)p.temperature * 0.01).ToString());
+            }
+            static public void WriteCSVHeaderP(StreamWriter w)
+            {
+                w.WriteLine("#gpstime,press(Pa),temp(deg)");
+            }
+
+            public void DumpG(StreamWriter w_nmea, BinaryWriter w_ubx)
+            {
+                w_ubx.Write(g.ubx_raw, 0, g.ubx_raw.Length);
+                if (g.hasOutput == true)
+                {
+                    w_nmea.WriteLine(g.ubx.nmea.gpgga);
+                    w_nmea.WriteLine(g.ubx.nmea.gpzda);
+                }
+            }
         }
         public SylphidePages pages = new SylphidePages();
 
@@ -329,10 +378,11 @@ namespace NinjaScan_GUI
             if (head == A_Page.header)
             {
                 pages.a.Update(br);
+                lock (fileSemaphore) { pages.DumpA(csv_A); }
                 Console.Write("[A page]:");
-                Console.Write(
+                Console.WriteLine(
                     pages.a.ax + "," + pages.a.ay + "," + pages.a.az + "," +
-                    pages.a.gx + "," + pages.a.gy + "," + pages.a.gz + "\n");
+                    pages.a.gx + "," + pages.a.gy + "," + pages.a.gz);
                 
                 AHRS.Update(
                     (float)pages.a.cal_gx / 180 * (float)Math.PI,
@@ -345,56 +395,24 @@ namespace NinjaScan_GUI
             else if (head == P_Page.header)
             {
                 pages.p.Update(br);
+                lock (fileSemaphore) { pages.DumpP(csv_P); }
                 Console.Write("[P page]:");
-                Console.Write(pages.p.pressure * 0.01 + "(hPa)\n");
+                Console.WriteLine(pages.p.pressure * 0.01 + "(hPa)");
             }
             else if (head == M_Page.header)
             {
                 pages.m.Update(br);
-                Console.Write("[M page]:");
+                lock (fileSemaphore) { pages.DumpM(csv_M); }
                 double conv = 0.1;
-                Console.Write(pages.m.mx * conv + "," + pages.m.my * conv + "," + pages.m.mz * conv + "\n");
+                Console.Write("[M page]:");
+                Console.WriteLine(pages.m.mx * conv + "," + pages.m.my * conv + "," + pages.m.mz * conv);
             }
             else if (head == G_Page.header)
             {
                 pages.g.Update(br);
+                lock (fileSemaphore) { pages.DumpG(nmea_G, ubx_G); }
                 Console.Write("[G page]:");
-                Console.Write(pages.g.ubx_raw + "\n");
-            }
-
-            // ファイルが開いているなら書き込みを行う。
-            if (closeLogTokenSource != null)
-            {
-                writeFrombinTocsv(head, csv_A, csv_M, csv_P, csv_G, ubx_G);
-            }
-        }
-
-        private void writeFrombinTocsv(byte head, StreamWriter asw, StreamWriter msw, StreamWriter psw, StreamWriter gsw, FileStream gfs)
-        {
-            if (head == A_Page.header)
-            {
-                asw.WriteLine(pages.a.gps_time.ToString() + ","
-                    + pages.a.cal_ax.ToString() + "," + pages.a.cal_ay.ToString() + "," + pages.a.cal_az.ToString() + ","
-                    + pages.a.cal_gx.ToString() + "," + pages.a.cal_gy.ToString() + "," + pages.a.cal_gz.ToString());
-            }
-            else if (head == M_Page.header)
-            {
-                msw.WriteLine(pages.m.gps_time.ToString() + ","
-                    + pages.m.cal_mx.ToString() + "," + pages.m.cal_my.ToString() + "," + pages.m.cal_mz.ToString());
-            }
-            else if (head == P_Page.header)
-            {
-                psw.WriteLine(pages.p.gps_time.ToString() + ","
-                    + pages.p.pressure.ToString() + "," + pages.p.temperature.ToString());
-            }
-            else if (head == G_Page.header)
-            {
-                gfs.Write(pages.g.ubx_raw, 0, pages.g.ubx_raw.Length);
-                if (pages.g.hasOutput == true)
-                {
-                    gsw.WriteLine(pages.g.ubx.nmea.gpgga);
-                    gsw.WriteLine(pages.g.ubx.nmea.gpzda);
-                }
+                Console.WriteLine(pages.g.ubx_raw);
             }
         }
 
@@ -495,69 +513,67 @@ namespace NinjaScan_GUI
                 }
             }
 
+            BinaryReader br = new BinaryReader(File.OpenRead(input_file));
+
             StreamWriter csv_A_sd = new StreamWriter(A_file, false);
             StreamWriter csv_P_sd = new StreamWriter(P_file, false);
             StreamWriter csv_M_sd = new StreamWriter(M_file, false);
-            StreamWriter csv_G_sd = new StreamWriter(G_file, false);
+            StreamWriter nmea_G_sd = new StreamWriter(G_file, false);
             BinaryWriter ubx_G_sd = new BinaryWriter(File.OpenWrite(UBX_file));
 
-            csv_A_sd.WriteLine("#gpstime,acc_xa(g),acc_y(g),acc_z(g),gyro_x(dps),gyro_y(dps),gyro_z(dps)");
-            csv_M_sd.WriteLine("#gpstime,mag_x(uT),mag_y(uT),mag_z(uT)");
-            csv_P_sd.WriteLine("#gpstime,press(Pa),temp(deg)");
+            SylphidePages.WriteCSVHeaderA(csv_A_sd);
+            SylphidePages.WriteCSVHeaderM(csv_M_sd);
+            SylphidePages.WriteCSVHeaderP(csv_P_sd);
 
-            Task.Factory.StartNew(() =>
+            var tokenSource = new CancellationTokenSource();
+            var token = tokenSource.Token;
+
+            convertingTask = Task.Factory.StartNew(() =>
             {
-                BinaryReader br = new BinaryReader(File.OpenRead(input_file));
-
                 SylphidePages pages_sd = new SylphidePages();
 
-                do
+                while(true)
                 {
+                    token.ThrowIfCancellationRequested();
+
                     // LOG.DATの場合はProtocolのheaderの頭出しは必要ない
                     byte head = br.ReadByte();
                     if (head == A_Page.header)
                     {
                         pages_sd.a.Update(br);
-                        csv_A_sd.WriteLine(pages_sd.a.gps_time + "," +
-                            pages_sd.a.cal_ax + "," + pages_sd.a.cal_ay + "," + pages_sd.a.cal_az + "," +
-                            pages_sd.a.cal_gx + "," + pages_sd.a.cal_gy + "," + pages_sd.a.cal_gz);
+                        pages_sd.DumpA(csv_A_sd);
                     }
                     else if (head == P_Page.header)
                     {
                         pages_sd.p.Update(br);
-                        csv_P_sd.WriteLine(pages_sd.p.gps_time + "," +
-                            pages_sd.p.pressure + "," + (double)pages_sd.p.temperature * 0.01);
+                        pages_sd.DumpP(csv_P_sd);
                     }
                     else if (head == M_Page.header)
                     {
                         pages_sd.m.Update(br);
-                        csv_M_sd.WriteLine(pages_sd.m.gps_time + "," +
-                            pages_sd.m.cal_mx + "," + pages_sd.m.cal_my + "," + pages_sd.m.cal_mz);
+                        pages_sd.DumpM(csv_M_sd);
                     }
                     else if (head == G_Page.header)
                     {
                         pages_sd.g.Update(br);
-                        ubx_G_sd.Write(pages_sd.g.ubx_raw); // GPS pageだけubx形式
-                        if (pages_sd.g.hasOutput == true)
-                        {
-                            csv_G_sd.WriteLine(pages_sd.g.ubx.nmea.gpgga);
-                            if (pages_sd.g.ubx.nmea.time.Second == 0 && pages_sd.g.ubx.nmea.time.Millisecond == 0)
-                            {
-                                csv_G_sd.WriteLine(pages_sd.g.ubx.nmea.gpzda);
-                            }
-                        }
+                        pages_sd.DumpG(nmea_G_sd, ubx_G_sd);
                     }
-                } while (true);
-            }).ContinueWith(t =>
+                }
+            }, token).ContinueWith(t =>
             {
                 csv_A_sd.Close();
                 csv_P_sd.Close();
                 csv_M_sd.Close();
-                csv_G_sd.Close();
+                nmea_G_sd.Close();
                 ubx_G_sd.Close();
 
-                DialogResult result = MessageBox.Show("Complete to output CSV files");
+                cancelConvertTokenSource.Dispose();
+                cancelConvertTokenSource = null;
+                loggingTask = null;
 
+                if (closing) { return; }
+                DialogResult result = MessageBox.Show("Complete to output CSV files");
+                
                 Invoke((MethodInvoker)(() =>
                 {
                     buttonSDConvert.Text = "Convert";
@@ -565,6 +581,7 @@ namespace NinjaScan_GUI
                 }));
             });
 
+            cancelConvertTokenSource = tokenSource;
             buttonSDConvert.Enabled = false;
             buttonSDConvert.Text = "Converting...";
         }
@@ -615,37 +632,52 @@ namespace NinjaScan_GUI
 
             var tokenSource = new CancellationTokenSource();
             var token = tokenSource.Token;
-            Task task = null;
+
+            StreamWriter csv_A_orig = csv_A, csv_A_usb = new StreamWriter(A_file, true);
+            StreamWriter csv_M_orig = csv_M, csv_M_usb = new StreamWriter(M_file, true);
+            StreamWriter csv_P_orig = csv_P, csv_P_usb = new StreamWriter(P_file, true); ;
+            StreamWriter nmea_G_orig = nmea_G, nmea_G_usb = new StreamWriter(G_file, true); ;
+            BinaryWriter ubx_G_orig = ubx_G, ubx_G_usb = new BinaryWriter(new FileStream(UBX_file, FileMode.Append, FileAccess.Write)); ;
+
+            SylphidePages.WriteCSVHeaderA(csv_A_usb);
+            SylphidePages.WriteCSVHeaderM(csv_M_usb);
+            SylphidePages.WriteCSVHeaderP(csv_P_usb);
 
             // バックグラウンド処理
-            task = Task.Factory.StartNew(() =>
+            loggingTask = Task.Factory.StartNew(() =>
             {
-                File.WriteAllText(A_file, "#gpstime,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z\n");
-                File.WriteAllText(M_file, "#gpstime,mag_x,mag_y,mag_z\n");
-                File.WriteAllText(P_file, "#gpstime,press,temp\n");
-
-                csv_A = new StreamWriter(A_file, true);
-                csv_M = new StreamWriter(M_file, true);
-                csv_P = new StreamWriter(P_file, true);
-                csv_G = new StreamWriter(G_file, true);
-                ubx_G = new FileStream(UBX_file, FileMode.Append, FileAccess.Write);
-
-                while (true)
+                lock (fileSemaphore)
                 {
-                    token.ThrowIfCancellationRequested();
+                    csv_A = csv_A_usb;
+                    csv_M = csv_M_usb;
+                    csv_P = csv_P_usb;
+                    nmea_G = nmea_G_usb;
+                    ubx_G = ubx_G_usb;
                 }
+
+                while (true) { token.ThrowIfCancellationRequested(); }
             }, token).ContinueWith(t =>
             {
-                csv_A.Close();
-                csv_M.Close();
-                csv_P.Close();
-                csv_G.Close();
-                ubx_G.Close();
-            }).ContinueWith(t =>
-            {
+                lock (fileSemaphore)
+                {
+                    csv_A = csv_A_orig;
+                    csv_M = csv_M_orig;
+                    csv_P = csv_P_orig;
+                    nmea_G = nmea_G_orig;
+                    ubx_G = ubx_G_orig;
+                }
+
+                csv_A_usb.Close();
+                csv_M_usb.Close();
+                csv_P_usb.Close();
+                nmea_G_usb.Close();
+                ubx_G_usb.Close();
+
                 closeLogTokenSource.Dispose();
                 closeLogTokenSource = null;
+                loggingTask = null;
 
+                if (closing) { return; }
                 Invoke((MethodInvoker)(() =>
                 {
                     buttonUSBBrowse.Enabled = true;
@@ -666,6 +698,29 @@ namespace NinjaScan_GUI
         private void buttonUSBStop_Click(object sender, EventArgs e)
         {
             closeLogTokenSource.Cancel(true);
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            closing = true;
+            if (cancelConvertTokenSource != null)
+            {
+                Task task = convertingTask;
+                cancelConvertTokenSource.Cancel();
+                task.Wait();
+            }
+            if (closeLogTokenSource != null) 
+            {
+                Task task = loggingTask;
+                closeLogTokenSource.Cancel();
+                task.Wait();
+            }
+            if (disconnectTokenSource != null)
+            {
+                Task task = connectingTask;
+                disconnectTokenSource.Cancel();
+                task.Wait();
+            }
         }
     }
 }
