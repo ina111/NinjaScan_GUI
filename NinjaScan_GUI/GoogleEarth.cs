@@ -42,7 +42,7 @@ namespace NinjaScan_GUI
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            object[] args = { ubx.llh.lat * Math.Pow(10, -7), ubx.llh.lon * Math.Pow(10, -7), ubx.llh.height };
+            object[] args = { 1e-7 * ubx.llh.lat, 1e-7 * ubx.llh.lon, ubx.llh.height };
             webBrowser1.Document.InvokeScript("js_func", args);
         }
 
@@ -50,11 +50,13 @@ namespace NinjaScan_GUI
         {
             sec++;
             labelGPSFix.Text = "STATUS: " + ubx.status.gpsFix;
-            labelGPSLLH.Text = "latitude: " + ubx.llh.lat + "  longitude: " + ubx.llh.lon;
-            labelTIME.Text = "UTC TIME: " + ubx.utc.hour + ":" + ubx.utc.min + ":" + ubx.utc.sec.ToString("F1");
+            var lat = 1e-7 * ubx.llh.lat; 
+            var lng = 1e-7 * ubx.llh.lon;
+            labelGPSLLH.Text = string.Format("latitude: {0:F6}  longitude: {1:F6}", lat, lng);
+            labelTIME.Text = string.Format("UTC TIME: {0}:{1}:{2:F1}", ubx.utc.hour, ubx.utc.min, ubx.utc.sec);
             if (sec >= 30 && (sec % 10 == 0))
             {
-                object[] args = { ubx.llh.lat * Math.Pow(10, -7), ubx.llh.lon * Math.Pow(10, -7), ubx.llh.height };
+                object[] args = { lat, lng, ubx.llh.height };
                 webBrowser1.Document.InvokeScript("js_func1", args);
             }
         }
