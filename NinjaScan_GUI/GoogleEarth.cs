@@ -16,7 +16,7 @@ namespace NinjaScan_GUI
         G_Page.UBlox ubx;
 
         // 起動からの時間
-        private int sec = 0;
+        double elapsed_t = 0;
 
         public GoogleEarth(Form1 owner)
         {
@@ -43,21 +43,24 @@ namespace NinjaScan_GUI
         private void button1_Click_1(object sender, EventArgs e)
         {
             object[] args = { 1e-7 * ubx.llh.lat, 1e-7 * ubx.llh.lon, ubx.llh.height };
-            webBrowser1.Document.InvokeScript("js_func", args);
+            webBrowser1.Document.InvokeScript("updateView", args);
         }
 
+        const double update_marker_interval = 10;
+        double previous_t_update_markers = 0;
         private void timer1_Tick(object sender, EventArgs e)
         {
-            sec++;
+            elapsed_t += 1E-3 * timer1.Interval;
             labelGPSFix.Text = "STATUS: " + ubx.status.gpsFix;
             var lat = 1e-7 * ubx.llh.lat; 
             var lng = 1e-7 * ubx.llh.lon;
             labelGPSLLH.Text = string.Format("latitude: {0:F6}  longitude: {1:F6}", lat, lng);
             labelTIME.Text = string.Format("UTC TIME: {0}:{1}:{2:F1}", ubx.utc.hour, ubx.utc.min, ubx.utc.sec);
-            if (sec >= 30 && (sec % 10 == 0))
+            if (elapsed_t - previous_t_update_markers > update_marker_interval)
             {
+                previous_t_update_markers = elapsed_t;
                 object[] args = { lat, lng, ubx.llh.height };
-                webBrowser1.Document.InvokeScript("js_func1", args);
+                webBrowser1.Document.InvokeScript("updateMarkers", args);
             }
         }
     }
