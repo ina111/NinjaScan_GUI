@@ -105,7 +105,7 @@ namespace NinjaScan_GUI
             // 3 seconds per cycle
             //list.Add(time, Math.Sin(2.0 * Math.PI * time / 3.0));
             xlist.Add(time, p_page.pressure);
-            ylist.Add(time, p_page.temperature / 100);
+            ylist.Add(time, 1e-2 * p_page.temperature);
 
             // Keep the X scale at a rolling 30 second interval, with one
             // major step between the max X value and the end of the axis
