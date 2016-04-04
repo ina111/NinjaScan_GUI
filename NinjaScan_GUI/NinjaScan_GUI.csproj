@@ -218,12 +218,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetPath)" "$(ProjectDir)\bin\NinjaScan_GUI_Release"
-copy "$(TargetDir)\OpenTK.dll" "$(ProjectDir)\bin\NinjaScan_GUI_Release"
-copy "$(TargetDir)\OpenTK.GLControl.dll" "$(ProjectDir)\bin\NinjaScan_GUI_Release"
-copy "$(TargetDir)\ZedGraph.dll" "$(ProjectDir)\bin\NinjaScan_GUI_Release"
-copy "$(TargetDir)\GoogleEarth.html" "$(ProjectDir)\bin\NinjaScan_GUI_Release"
-copy "$(TargetDir)\MathNet.Numerics.dll" "$(ProjectDir)\bin\NinjaScan_GUI_Release"</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
