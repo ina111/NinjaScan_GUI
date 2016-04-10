@@ -151,6 +151,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "AttiPlot";
             this.Text = "Attitude Plot";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AttiPlot_FormClosing);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
