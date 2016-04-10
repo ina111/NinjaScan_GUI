@@ -214,6 +214,12 @@ namespace NinjaScan_GUI
             a_page.calibrationData.drift_gz += mean_z;
         }
 
+        private void GyroPlot_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.Hide();
+            e.Cancel = true;
+        }
+
 
     }
 }

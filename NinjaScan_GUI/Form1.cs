@@ -54,56 +54,71 @@ namespace NinjaScan_GUI
             comboBoxCOM.Items.AddRange(ports);
         }
 
+        
         public Form1()
         {
             InitializeComponent();
             updatePortList();
         }
 
+        GyroPlot gyroPlot = null;
         private void butonGyro_Click(object sender, EventArgs e)
         {
-            GyroPlot gp = new GyroPlot(this);
-            gp.Show();
+            if (gyroPlot == null) { gyroPlot = new GyroPlot(this); }
+            gyroPlot.Show();
         }
 
+        AccPlot accPlot = null;
         private void buttonAcc_Click(object sender, EventArgs e)
         {
-            AccPlot ap = new AccPlot(this);
-            ap.Show();
+            if (accPlot == null) { accPlot = new AccPlot(this); }
+            accPlot.Show();
         }
 
+        MagPlot magPlot = null;
         private void buttonMag_Click(object sender, EventArgs e)
         {
-            MagPlot mp = new MagPlot(this);
-            mp.Show();
+            if (magPlot == null) { magPlot = new MagPlot(this); }
+            magPlot.Show();
         }
 
+        PressPlot pressPlot = null;
         private void buttonPress_Click(object sender, EventArgs e)
         {
-            PressPlot pp = new PressPlot(this);
-            pp.Show();
+            if (pressPlot == null) { pressPlot = new PressPlot(this); }
+            pressPlot.Show();
         }
 
+        AttiPlot attiPlot = null;
         private void buttonAtti_Click(object sender, EventArgs e)
         {
-            AttiPlot atp = new AttiPlot(this);
-            atp.Show();
+            if (attiPlot == null) { attiPlot = new AttiPlot(this); }
+            attiPlot.Show();
         }
 
+        GoogleEarth googleEarth = null;
         private void buttonMap_Click(object sender, EventArgs e)
         {
-            GoogleEarth ge = new GoogleEarth(this);
-            ge.Show();
+            if (googleEarth == null) { googleEarth = new GoogleEarth(this); }
+            googleEarth.Show();
         }
 
+        Cube3D c3d = null;
         private void button3DCube_Click(object sender, EventArgs e)
         {
-            using(Cube3D c3d = new Cube3D(this))
+            if(c3d == null)
             {
-                c3d.Run(30.0);
+                Task.Factory.StartNew(() =>
+                {
+                    c3d = new Cube3D(this);
+                    c3d.Run(30.0);
+                });
+            }
+            else
+            {
+                c3d.Visible = true;
             }
         }
-
 
         private void comboBoxCOM_SelectedIndexChanged(object sender, EventArgs e)
         {

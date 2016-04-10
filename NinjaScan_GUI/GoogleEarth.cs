@@ -58,5 +58,11 @@ namespace NinjaScan_GUI
                 webBrowser1.Document.InvokeScript("js_func1", args);
             }
         }
+
+        private void GoogleEarth_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.Hide();
+            e.Cancel = true;
+        }
     }
 }
