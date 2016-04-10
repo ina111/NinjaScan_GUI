@@ -128,6 +128,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "GoogleEarth";
             this.Text = "GPS Viewer";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GoogleEarth_FormClosing);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();

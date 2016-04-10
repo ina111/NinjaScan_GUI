@@ -178,6 +178,12 @@ namespace NinjaScan_GUI
             }
         }
 
+        private void MagPlot_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.Hide();
+            e.Cancel = true;
+        }
+
 
     }
 }

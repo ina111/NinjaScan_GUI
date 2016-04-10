@@ -186,6 +186,10 @@ namespace NinjaScan_GUI
             }
         }
 
-
+        private void PressPlot_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.Hide();
+            e.Cancel = true;
+        }
     }
 }
