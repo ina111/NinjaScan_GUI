@@ -179,6 +179,10 @@ namespace NinjaScan_GUI
             }
         }
 
-
+        private void AccPlot_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.Hide();
+            e.Cancel = true;
+        }
     }
 }

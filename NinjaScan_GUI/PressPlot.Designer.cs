@@ -204,6 +204,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "PressPlot";
             this.Text = "Pressure Plot";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PressPlot_FormClosing);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);

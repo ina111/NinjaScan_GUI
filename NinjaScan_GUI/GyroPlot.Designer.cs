@@ -33,6 +33,11 @@
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.buttonSetDrift = new System.Windows.Forms.Button();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.labelz = new System.Windows.Forms.Label();
+            this.labelx = new System.Windows.Forms.Label();
+            this.labely = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.radioButton3 = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
@@ -41,17 +46,12 @@
             this.label1 = new System.Windows.Forms.Label();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.button1 = new System.Windows.Forms.Button();
-            this.labelx = new System.Windows.Forms.Label();
-            this.labely = new System.Windows.Forms.Label();
-            this.labelz = new System.Windows.Forms.Label();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.buttonSetDrift = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
-            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // zedGraphControl1
@@ -103,6 +103,55 @@
             this.panel1.Size = new System.Drawing.Size(630, 87);
             this.panel1.TabIndex = 1;
             this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
+            // 
+            // buttonSetDrift
+            // 
+            this.buttonSetDrift.Location = new System.Drawing.Point(533, 55);
+            this.buttonSetDrift.Name = "buttonSetDrift";
+            this.buttonSetDrift.Size = new System.Drawing.Size(75, 23);
+            this.buttonSetDrift.TabIndex = 11;
+            this.buttonSetDrift.Text = "Set Drift";
+            this.buttonSetDrift.UseVisualStyleBackColor = true;
+            this.buttonSetDrift.Click += new System.EventHandler(this.buttonSetDrift_Click);
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.labelz);
+            this.groupBox3.Controls.Add(this.labelx);
+            this.groupBox3.Controls.Add(this.labely);
+            this.groupBox3.Location = new System.Drawing.Point(3, 48);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(515, 32);
+            this.groupBox3.TabIndex = 10;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Mean（near 200 point)";
+            // 
+            // labelz
+            // 
+            this.labelz.AutoSize = true;
+            this.labelz.Location = new System.Drawing.Point(364, 15);
+            this.labelz.Name = "labelz";
+            this.labelz.Size = new System.Drawing.Size(58, 12);
+            this.labelz.TabIndex = 9;
+            this.labelz.Text = "z (deg/s) :";
+            // 
+            // labelx
+            // 
+            this.labelx.AutoSize = true;
+            this.labelx.Location = new System.Drawing.Point(23, 15);
+            this.labelx.Name = "labelx";
+            this.labelx.Size = new System.Drawing.Size(59, 12);
+            this.labelx.TabIndex = 5;
+            this.labelx.Text = "x (deg/s) :";
+            // 
+            // labely
+            // 
+            this.labely.AutoSize = true;
+            this.labely.Location = new System.Drawing.Point(199, 15);
+            this.labely.Name = "labely";
+            this.labely.Size = new System.Drawing.Size(59, 12);
+            this.labely.TabIndex = 7;
+            this.labely.Text = "y (deg/s) :";
             // 
             // groupBox1
             // 
@@ -204,55 +253,6 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // labelx
-            // 
-            this.labelx.AutoSize = true;
-            this.labelx.Location = new System.Drawing.Point(23, 15);
-            this.labelx.Name = "labelx";
-            this.labelx.Size = new System.Drawing.Size(59, 12);
-            this.labelx.TabIndex = 5;
-            this.labelx.Text = "x (deg/s) :";
-            // 
-            // labely
-            // 
-            this.labely.AutoSize = true;
-            this.labely.Location = new System.Drawing.Point(199, 15);
-            this.labely.Name = "labely";
-            this.labely.Size = new System.Drawing.Size(59, 12);
-            this.labely.TabIndex = 7;
-            this.labely.Text = "y (deg/s) :";
-            // 
-            // labelz
-            // 
-            this.labelz.AutoSize = true;
-            this.labelz.Location = new System.Drawing.Point(364, 15);
-            this.labelz.Name = "labelz";
-            this.labelz.Size = new System.Drawing.Size(58, 12);
-            this.labelz.TabIndex = 9;
-            this.labelz.Text = "z (deg/s) :";
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Controls.Add(this.labelz);
-            this.groupBox3.Controls.Add(this.labelx);
-            this.groupBox3.Controls.Add(this.labely);
-            this.groupBox3.Location = new System.Drawing.Point(3, 48);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(515, 32);
-            this.groupBox3.TabIndex = 10;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Mean（near 200 point)";
-            // 
-            // buttonSetDrift
-            // 
-            this.buttonSetDrift.Location = new System.Drawing.Point(533, 55);
-            this.buttonSetDrift.Name = "buttonSetDrift";
-            this.buttonSetDrift.Size = new System.Drawing.Size(75, 23);
-            this.buttonSetDrift.TabIndex = 11;
-            this.buttonSetDrift.Text = "Set Drift";
-            this.buttonSetDrift.UseVisualStyleBackColor = true;
-            this.buttonSetDrift.Click += new System.EventHandler(this.buttonSetDrift_Click);
-            // 
             // GyroPlot
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -261,15 +261,16 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "GyroPlot";
             this.Text = "GyroPlot";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GyroPlot_FormClosing);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
 
         }

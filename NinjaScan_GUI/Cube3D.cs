@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
@@ -13,12 +14,7 @@ namespace NinjaScan_GUI
     class Cube3D : GameWindow
     {
 
-        float deg = 0;
-        OpenTK.Vector3 vec3 = new Vector3();
-        Vector4 vec4 = new Vector4();
-        float angle;
-
-        public AHRS.MadgwickAHRS ahrs;
+        AHRS.MadgwickAHRS ahrs;
 
         private void DrawCube()
         {
@@ -105,9 +101,12 @@ namespace NinjaScan_GUI
                     ahrs.Quaternion[2],
                     ahrs.Quaternion[3],
                     ahrs.Quaternion[0]);
+                float angle;
+                OpenTK.Vector3 vec3 = new Vector3();
                 q.ToAxisAngle(out vec3, out angle);
                 GL.Rotate((float)(angle * 180 / Math.PI), vec3);
 
+                //float deg = 0;
                 //GL.Rotate(deg, Vector3d.UnitY);
                 //deg += 1;
 
@@ -134,6 +133,12 @@ namespace NinjaScan_GUI
             GL.MatrixMode(MatrixMode.Projection);
             Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, (float)Width / (float)Height, 1.0f, 64.0f);
             GL.LoadMatrix(ref projection);
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            this.Visible = false;
+            e.Cancel = true;
         }
     }
 }

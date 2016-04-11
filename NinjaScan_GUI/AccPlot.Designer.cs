@@ -204,6 +204,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "AccPlot";
             this.Text = "Acceleration Plot";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AccPlot_FormClosing);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);

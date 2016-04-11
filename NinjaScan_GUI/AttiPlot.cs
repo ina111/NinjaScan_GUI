@@ -94,7 +94,7 @@ namespace NinjaScan_GUI
 
             // Time is measured in seconds
             //double time = (Environment.TickCount - tickStart) / 1000.0;
-            double time = a_page.gps_time / 1000.0;
+            double time = 1e-3 * a_page.gps_time;
 
             // 3 seconds per cycle
             //list.Add(time, Math.Sin(2.0 * Math.PI * time / 3.0));
@@ -149,6 +149,10 @@ namespace NinjaScan_GUI
             }
         }
 
-
+        private void AttiPlot_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.Hide();
+            e.Cancel = true;
+        }
     }
 }
