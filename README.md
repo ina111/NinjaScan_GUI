@@ -1,5 +1,6 @@
 NinjaScan GUI
 =============
+[![Build Status](https://travis-ci.org/ina111/NinjaScan_GUI.svg?branch=master)](https://travis-ci.org/ina111/NinjaScan_GUI)
 
 Ninja Scan GUI software including Sylphide format parser.
 
