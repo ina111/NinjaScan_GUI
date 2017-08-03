@@ -47,7 +47,18 @@ namespace NinjaScan_GUI
 
         private void updatePortList(){
             comboBoxCOM.Items.Clear();
-            string[] serial_ports = SerialPort.GetPortNames();
+            string[] serial_ports = SerialPort.GetPortNames().Distinct().ToArray(); // delete redundant ports.
+            Array.Sort(serial_ports, (s1, s2) => {
+                while (true) {
+                    Match m1 = Regex.Match(s1, @"^(.*?)(\d+)$");
+                    if (!m1.Success) { break; }
+                    Match m2 = Regex.Match(s2, @"^(.*?)(\d+)$");
+                    if (!m2.Success) { break; }
+                    if (m1.Groups[1].Value != m2.Groups[1].Value) { break; }
+                    return int.Parse(m1.Groups[2].Value) - int.Parse(m2.Groups[2].Value);
+                }
+                return String.Compare(s1, s2); 
+            });
             string[] ports = new string[serial_ports.Length + 1];
             Array.Copy(serial_ports, ports, serial_ports.Length);
             ports[ports.Length - 1] = string.Format("TCP({0})", defaultTcpPort);
